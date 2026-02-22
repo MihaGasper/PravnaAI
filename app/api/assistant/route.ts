@@ -15,9 +15,16 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check authentication
+    // Check authentication - required
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Za uporabo te funkcije se morate prijaviti' },
+        { status: 401 }
+      )
+    }
 
     // Create a new thread
     const thread = await openai.beta.threads.create()

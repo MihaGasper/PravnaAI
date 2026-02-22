@@ -18,9 +18,16 @@ export async function POST(request: Request) {
       messages = []
     } = body
 
-    // Check authentication (optional - works without auth too)
+    // Check authentication - required
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: 'Za uporabo te funkcije se morate prijaviti' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
 
     let userPrompt: string
 

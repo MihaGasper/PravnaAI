@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { WelcomeScreen } from "@/components/pravna/WelcomeScreen";
 import { TopBar } from "@/components/pravna/TopBar";
 import { CategoryGrid, type Category } from "@/components/pravna/CategoryGrid";
@@ -10,12 +11,14 @@ import {
 } from "@/components/pravna/GuidedIntake";
 import { ResultCard } from "@/components/pravna/ResultCard";
 import { ToastContainer } from "@/components/pravna/Toast";
+import { createClient } from "@/lib/supabase/client";
 
 type Screen = "welcome" | "categories" | "intake" | "result";
 
 const TRANSITION_MS = 350;
 
 export default function PravnaAIPage() {
+  const router = useRouter();
   const [screen, setScreen] = useState<Screen>("welcome");
   const [nextScreen, setNextScreen] = useState<Screen | null>(null);
   const [animState, setAnimState] = useState<"idle" | "exit" | "enter">("idle");
@@ -24,6 +27,17 @@ export default function PravnaAIPage() {
     null
   );
   const [, setIntakeData] = useState<IntakeData | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    };
+    checkAuth();
+  }, []);
 
   const navigate = useCallback(
     (to: Screen) => {
@@ -59,6 +73,11 @@ export default function PravnaAIPage() {
         : "";
 
   const handleSelectMode = (selectedMode: "simple" | "expert") => {
+    // Redirect to login if not authenticated
+    if (!isAuthenticated) {
+      router.push("/auth/login");
+      return;
+    }
     setMode(selectedMode);
     navigate("categories");
   };
