@@ -1,29 +1,85 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Send, Loader2 } from "lucide-react";
 
-export function FollowUpChat() {
+interface FollowUpChatProps {
+  conversationId?: string;
+  messages?: Array<{ role: 'user' | 'assistant'; content: string }>;
+}
+
+export function FollowUpChat({ conversationId, messages = [] }: FollowUpChatProps) {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
+  const [streamedAnswer, setStreamedAnswer] = useState("");
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!question.trim() || loading) return;
 
     setLoading(true);
-    setTimeout(() => {
-      setAnswer(
-        `Na podlagi vašega vprašanja: "${question}" — predlagam, da najprej preverite, ali imate vse dokumente (najemno pogodbo, primopredajni zapisnik, dokazila o plačilu varščine). V primeru sodnega postopka boste te dokumente potrebovali kot dokazno gradivo. Za pravno svetovanje priporočam posvet z odvetnikom za stanovanjsko pravo.`
-      );
+    setStreamedAnswer("");
+    setAnswer("");
+
+    abortControllerRef.current = new AbortController();
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          followUpQuestion: question,
+          conversationId,
+          messages,
+        }),
+        signal: abortControllerRef.current.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error("Napaka pri komunikaciji s strežnikom");
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader");
+
+      const decoder = new TextDecoder();
+      let fullAnswer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        fullAnswer += chunk;
+        setStreamedAnswer(fullAnswer);
+      }
+
+      setAnswer(fullAnswer);
+      setStreamedAnswer("");
+    } catch (error) {
+      if (error instanceof Error && error.name !== "AbortError") {
+        setAnswer("Prišlo je do napake. Prosimo, poskusite znova.");
+      }
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
   };
+
+  const displayAnswer = streamedAnswer || answer;
 
   return (
     <div className="rounded-xl border border-border bg-card p-5">
-      {!answer ? (
+      {!displayAnswer ? (
         <>
           <p className="text-sm font-medium text-foreground mb-3">
             {"Imate dodatno vprašanje?"}
@@ -55,13 +111,18 @@ export function FollowUpChat() {
           <p className="text-xs text-muted-foreground mb-2">
             {question}
           </p>
-          <p className="text-sm text-foreground leading-relaxed">{answer}</p>
-          <button
-            onClick={() => { setAnswer(""); setQuestion(""); }}
-            className="mt-3 text-xs text-accent font-medium hover:underline"
-          >
-            {"Novo vprašanje"}
-          </button>
+          <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+            {displayAnswer}
+            {loading && <span className="inline-block w-1.5 h-4 bg-accent animate-pulse ml-0.5" />}
+          </p>
+          {!loading && (
+            <button
+              onClick={() => { setAnswer(""); setStreamedAnswer(""); setQuestion(""); }}
+              className="mt-3 text-xs text-accent font-medium hover:underline"
+            >
+              {"Novo vprašanje"}
+            </button>
+          )}
         </div>
       )}
     </div>

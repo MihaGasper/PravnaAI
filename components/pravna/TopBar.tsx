@@ -1,6 +1,7 @@
 "use client";
 
 import { Scale, RotateCcw } from "lucide-react";
+import { UserMenu } from "@/components/auth/UserMenu";
 
 interface TopBarProps {
   mode: "simple" | "expert";
@@ -38,6 +39,7 @@ export function TopBar({ mode, onReset, fontLarge, onToggleFont }: TopBarProps) 
               {mode === "simple" ? "Preprosto" : "Strokovno"}
             </span>
           </button>
+          <UserMenu />
         </div>
       </div>
     </header>
