@@ -4,6 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --disclaimer-banner-height: 40px;
   --background: #faf9f6;
   --foreground: #111110;
   --card: #ffffff;
