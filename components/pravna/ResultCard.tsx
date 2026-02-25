@@ -1,16 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { LegalBasisBlock } from "./LegalBasisBlock";
-import { DeadlineBadge } from "./DeadlineBadge";
-import { RecommendedStep } from "./RecommendedStep";
+import { useState, useEffect, useRef } from "react";
 import { DocumentModal } from "./DocumentModal";
+import { ReminderModal } from "./ReminderModal";
+import { LawyerModal } from "./LawyerModal";
 import { FollowUpChat } from "./FollowUpChat";
-import { showToast } from "./Toast";
-import { ArrowLeft, Bell, UserCircle, FileText, Check } from "lucide-react";
+import { ArrowLeft, Bell, UserCircle, FileText, Check, AlertCircle, RefreshCw } from "lucide-react";
+import type { Category } from "./CategoryGrid";
+import type { IntakeData } from "./GuidedIntake";
+import { useConversation } from "@/hooks/use-conversation";
 
 interface ResultCardProps {
   onBack: () => void;
+  conversationId: string | null;
+  category: Category;
+  intakeData: IntakeData;
 }
 
 const LOADING_STEPS = [
@@ -20,28 +24,112 @@ const LOADING_STEPS = [
   { text: "Sestavljam priporočila", delay: 2800 },
 ];
 
-export function ResultCard({ onBack }: ResultCardProps) {
+export function ResultCard({ onBack, conversationId, category, intakeData }: ResultCardProps) {
   const [loading, setLoading] = useState(true);
   const [visibleSteps, setVisibleSteps] = useState<number[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [showLawyerModal, setShowLawyerModal] = useState(false);
+  const [aiResponse, setAiResponse] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [quotaExceeded, setQuotaExceeded] = useState(false);
+  const hasCalledApi = useRef(false);
 
+  const { addMessage } = useConversation();
+
+  // Call API on mount
   useEffect(() => {
-    LOADING_STEPS.forEach((step, i) => {
-      setTimeout(() => {
-        setVisibleSteps((prev) => [...prev, i]);
-      }, step.delay);
-    });
+    if (hasCalledApi.current) return;
+    hasCalledApi.current = true;
 
-    const timer = setTimeout(() => setLoading(false), 4000);
-    return () => clearTimeout(timer);
-  }, []);
+    const callApi = async () => {
+      // Show loading animation steps
+      LOADING_STEPS.forEach((step, i) => {
+        setTimeout(() => {
+          setVisibleSteps((prev) => [...prev, i]);
+        }, step.delay);
+      });
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            category: category.id,
+            role: intakeData.role,
+            problem: intakeData.problem,
+            duration: intakeData.duration,
+            details: intakeData.details,
+            conversationId,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+
+          if (errorData.quotaExceeded) {
+            setQuotaExceeded(true);
+            setError("Dosegli ste dnevno omejitev poizvedb. Nadgradite svoj paket za več poizvedb.");
+            setLoading(false);
+            return;
+          }
+
+          throw new Error(errorData.error || "Napaka pri analizi");
+        }
+
+        // Handle streaming response
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let fullResponse = "";
+
+        if (reader) {
+          // Switch to result view after minimum loading time
+          setTimeout(() => {
+            setLoading(false);
+          }, 3500);
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            fullResponse += chunk;
+            setAiResponse(fullResponse);
+          }
+
+          // Save user message to database
+          if (conversationId) {
+            const userMessage = `Kategorija: ${category.label}\nVloga: ${intakeData.role}\nProblem: ${intakeData.problem}\nTrajanje: ${intakeData.duration}\nPodrobnosti: ${intakeData.details}`;
+            await addMessage(conversationId, "user", userMessage);
+          }
+        }
+      } catch (err) {
+        console.error("API error:", err);
+        setError(err instanceof Error ? err.message : "Prišlo je do napake");
+        setLoading(false);
+      }
+    };
+
+    callApi();
+  }, [category, intakeData, conversationId, addMessage]);
 
   const handleReminder = () => {
-    showToast("Opomnik nastavljen", "Opomnik za rok 30 dni");
+    setShowReminderModal(true);
   };
 
   const handleLawyer = () => {
-    showToast("Iskanje odvetnika", "Prikazujemo odvetnike v vaši bližini");
+    setShowLawyerModal(true);
+  };
+
+  const handleRetry = () => {
+    hasCalledApi.current = false;
+    setError(null);
+    setQuotaExceeded(false);
+    setLoading(true);
+    setVisibleSteps([]);
+    setAiResponse("");
+    // Trigger re-render to call API again
+    window.location.reload();
   };
 
   if (loading) {
@@ -77,6 +165,49 @@ export function ResultCard({ onBack }: ResultCardProps) {
     );
   }
 
+  if (error) {
+    return (
+      <div className="mx-auto max-w-lg px-6 py-24">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+            <AlertCircle className="w-6 h-6 text-destructive" />
+          </div>
+          <h2 className="font-serif text-xl text-foreground mb-2">
+            {quotaExceeded ? "Omejitev dosežena" : "Napaka pri analizi"}
+          </h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            {error}
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={onBack}
+              className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-secondary"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Nazaj
+            </button>
+            {quotaExceeded ? (
+              <a
+                href="/pricing"
+                className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:opacity-90"
+              >
+                Nadgradi paket
+              </a>
+            ) : (
+              <button
+                onClick={handleRetry}
+                className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:opacity-90"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Poskusi znova
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
       {/* Header */}
@@ -93,77 +224,20 @@ export function ResultCard({ onBack }: ResultCardProps) {
             {"Analiza primera"}
           </h2>
           <p className="text-xs text-muted-foreground">
-            {"Na podlagi slovenskega prava"}
+            {category.label} • Na podlagi slovenskega prava
           </p>
         </div>
       </div>
 
       {/* Result Sections */}
       <div className="flex flex-col gap-10">
-        {/* Situation */}
+        {/* AI Response */}
         <section>
           <h3 className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-3">
-            {"Vaša situacija"}
+            {"Pravna analiza"}
           </h3>
-          <p className="text-sm text-foreground leading-relaxed bg-card border border-border rounded-xl p-4">
-            {"Izselili ste se in najemodajalec vam že 2 meseca ne vrne varščine. Kljub ustnim obljubam in pisnim zahtevam varščina ni bila vrnjena. To predstavlja kršitev vaših pravic po Stanovanjskem zakonu."}
-          </p>
-        </section>
-
-        {/* Legal Basis */}
-        <section>
-          <h3 className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-3">
-            {"Pravna podlaga"}
-          </h3>
-          <div className="flex flex-col gap-2.5">
-            <LegalBasisBlock
-              article="103. člen Stanovanjskega zakona (SZ-1)"
-              description="Najemodajalec mora vrniti varščino najemniku v roku 30 dni po prenehanju najemne pogodbe, zmanjšano za morebitne upravičene odbitke, ki jih mora pisno utemeljiti."
-            />
-            <LegalBasisBlock
-              article="131. člen Obligacijskega zakonika (OZ)"
-              description="Za zamudo pri vračilu varščine lahko zahtevate zakonske zamudne obresti od dneva, ko je bila varščina dolgovana, do dneva plačila."
-            />
-          </div>
-        </section>
-
-        {/* Deadlines */}
-        <section>
-          <h3 className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-3">
-            {"Roki & Zastaranje"}
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            <DeadlineBadge text="30 dni za vračilo varščine" variant="critical" />
-            <DeadlineBadge text="3 leta zastaranje" variant="important" />
-          </div>
-        </section>
-
-        {/* Recommended Steps */}
-        <section>
-          <h3 className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-1">
-            {"Priporočeni koraki"}
-          </h3>
-          <div className="flex flex-col divide-y divide-border">
-            <RecommendedStep
-              number={1}
-              title="Pisno opozorilo"
-              description="Pošljite priporočeno pismo najemodajalcu z zahtevo za vračilo varščine v roku 15 dni."
-            />
-            <RecommendedStep
-              number={2}
-              title="Stanovanjska inšpekcija"
-              description="Če najemodajalec ne odreagira, podajte prijavo na stanovanjsko inšpekcijo."
-            />
-            <RecommendedStep
-              number={3}
-              title="Izvensodna mediacija"
-              description="Predlagajte mediacijo pri centru za mediacijo — hitrejše in cenejše od sodnega postopka."
-            />
-            <RecommendedStep
-              number={4}
-              title="Sodišče za spore malih vrednosti"
-              description="Če znesek ne presega 2.000 EUR, vložite tožbo brez odvetnika."
-            />
+          <div className="text-sm text-foreground leading-relaxed bg-card border border-border rounded-xl p-4 whitespace-pre-wrap">
+            {aiResponse || "Nalagam odgovor..."}
           </div>
         </section>
 
@@ -198,7 +272,10 @@ export function ResultCard({ onBack }: ResultCardProps) {
         </div>
 
         {/* Follow-up */}
-        <FollowUpChat />
+        <FollowUpChat
+          conversationId={conversationId}
+          aiResponse={aiResponse}
+        />
 
         {/* Disclaimer */}
         <p className="text-[11px] text-muted-foreground leading-relaxed text-center px-4 pb-4">
@@ -206,7 +283,26 @@ export function ResultCard({ onBack }: ResultCardProps) {
         </p>
       </div>
 
-      <DocumentModal open={showModal} onClose={() => setShowModal(false)} />
+      <DocumentModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        category={category}
+        intakeData={intakeData}
+        aiResponse={aiResponse}
+      />
+
+      <ReminderModal
+        open={showReminderModal}
+        onClose={() => setShowReminderModal(false)}
+        conversationId={conversationId}
+        defaultTitle={`Rok - ${category.label}`}
+      />
+
+      <LawyerModal
+        open={showLawyerModal}
+        onClose={() => setShowLawyerModal(false)}
+        category={category}
+      />
     </div>
   );
 }

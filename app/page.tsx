@@ -12,6 +12,7 @@ import {
 import { ResultCard } from "@/components/pravna/ResultCard";
 import { ToastContainer } from "@/components/pravna/Toast";
 import { createClient } from "@/lib/supabase/client";
+import { useConversation } from "@/hooks/use-conversation";
 
 type Screen = "welcome" | "categories" | "intake" | "result";
 
@@ -26,8 +27,12 @@ export default function PravnaAIPage() {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     null
   );
-  const [, setIntakeData] = useState<IntakeData | null>(null);
+  const [intakeData, setIntakeData] = useState<IntakeData | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [fontLarge, setFontLarge] = useState(false);
+
+  const { createConversation } = useConversation();
 
   // Check authentication on mount
   useEffect(() => {
@@ -87,8 +92,25 @@ export default function PravnaAIPage() {
     navigate("intake");
   };
 
-  const handleIntakeSubmit = (data: IntakeData) => {
+  const handleIntakeSubmit = async (data: IntakeData) => {
     setIntakeData(data);
+
+    // Create conversation in database
+    if (selectedCategory) {
+      const conversation = await createConversation({
+        title: `${selectedCategory.label} - ${data.role || 'Poizvedba'}`,
+        category: selectedCategory.id,
+        role: data.role,
+        problem: data.problem,
+        duration: data.duration,
+        details: data.details,
+      });
+
+      if (conversation) {
+        setConversationId(conversation.id);
+      }
+    }
+
     navigate("result");
   };
 
@@ -105,7 +127,14 @@ export default function PravnaAIPage() {
 
   return (
     <main className="min-h-screen overflow-x-hidden">
-      {screen !== "welcome" && <TopBar mode={mode} onReset={handleReset} />}
+      {screen !== "welcome" && (
+        <TopBar
+          mode={mode}
+          onReset={handleReset}
+          fontLarge={fontLarge}
+          onToggleFont={() => setFontLarge(!fontLarge)}
+        />
+      )}
 
       <div className={screenClass}>
         {screen === "welcome" && (
@@ -124,8 +153,13 @@ export default function PravnaAIPage() {
           />
         )}
 
-        {screen === "result" && (
-          <ResultCard onBack={handleBackToCategories} />
+        {screen === "result" && selectedCategory && intakeData && (
+          <ResultCard
+            onBack={handleBackToCategories}
+            conversationId={conversationId}
+            category={selectedCategory}
+            intakeData={intakeData}
+          />
         )}
       </div>
 

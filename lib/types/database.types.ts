@@ -271,6 +271,41 @@ export interface Database {
           updated_at?: string
         }
       }
+      reminders: {
+        Row: {
+          id: string
+          user_id: string
+          conversation_id: string | null
+          title: string
+          description: string | null
+          due_date: string
+          is_completed: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          conversation_id?: string | null
+          title: string
+          description?: string | null
+          due_date: string
+          is_completed?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          conversation_id?: string | null
+          title?: string
+          description?: string | null
+          due_date?: string
+          is_completed?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
