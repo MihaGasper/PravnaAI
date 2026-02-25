@@ -38,11 +38,19 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Protected routes - protect most of the app
-  // Only allow auth pages and static assets without login
-  const publicPaths = ['/auth/login', '/auth/signup', '/auth/callback']
-  const isPublicPath = publicPaths.some(path =>
-    request.nextUrl.pathname.startsWith(path)
-  )
+  // Only allow auth pages, webhooks, and public pages without login
+  const publicPaths = [
+    '/auth/login',
+    '/auth/signup',
+    '/auth/callback',
+    '/api/stripe/webhook',  // Stripe webhook must be public
+    '/pricing',             // Pricing page is public
+  ]
+
+  // Check if path is public (exact match for '/' or starts with public path)
+  const isPublicPath =
+    request.nextUrl.pathname === '/' ||
+    publicPaths.some(path => request.nextUrl.pathname.startsWith(path))
   const isProtectedPath = !isPublicPath
 
   if (isProtectedPath && !user) {

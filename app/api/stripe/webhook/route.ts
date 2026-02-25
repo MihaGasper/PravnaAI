@@ -29,29 +29,41 @@ export async function POST(request: Request) {
 
   const supabase = await createServiceClient()
 
+  console.log('Webhook received:', event.type)
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
+        console.log('Checkout session completed:', session.id)
+        console.log('Session metadata:', session.metadata)
+        console.log('Session mode:', session.mode)
+        console.log('Session subscription:', session.subscription)
 
         if (session.mode === 'subscription' && session.subscription) {
           const subscription = await stripe.subscriptions.retrieve(
             session.subscription as string
           )
+          console.log('Retrieved subscription:', subscription.id)
 
           const userId = session.metadata?.user_id
           if (!userId) {
             console.error('No user_id in session metadata')
             break
           }
+          console.log('User ID:', userId)
 
           // Get the plan based on price ID
           const priceId = subscription.items.data[0]?.price.id
-          const { data: plan } = await supabase
+          console.log('Price ID:', priceId)
+
+          const { data: plan, error: planError } = await supabase
             .from('subscription_plans')
             .select('id')
             .eq('stripe_price_id', priceId)
             .single()
+
+          console.log('Plan lookup result:', { plan, planError })
 
           if (!plan) {
             console.error('No plan found for price:', priceId)
@@ -59,7 +71,7 @@ export async function POST(request: Request) {
           }
 
           // Upsert subscription
-          await supabase
+          const { data: upsertData, error: upsertError } = await supabase
             .from('subscriptions')
             .upsert({
               user_id: userId,
@@ -73,6 +85,9 @@ export async function POST(request: Request) {
             }, {
               onConflict: 'user_id'
             })
+            .select()
+
+          console.log('Upsert result:', { upsertData, upsertError })
         }
         break
       }
