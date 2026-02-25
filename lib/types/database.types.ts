@@ -163,12 +163,135 @@ export interface Database {
           created_at?: string
         }
       }
+      subscription_plans: {
+        Row: {
+          id: string
+          name: string
+          display_name: string
+          stripe_price_id: string | null
+          queries_per_day: number
+          price_cents: number
+          features: string[]
+          is_active: boolean
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          display_name: string
+          stripe_price_id?: string | null
+          queries_per_day: number
+          price_cents?: number
+          features?: string[]
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          display_name?: string
+          stripe_price_id?: string | null
+          queries_per_day?: number
+          price_cents?: number
+          features?: string[]
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          plan_id: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          status: string
+          current_period_start: string | null
+          current_period_end: string | null
+          cancel_at_period_end: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          plan_id: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          status?: string
+          current_period_start?: string | null
+          current_period_end?: string | null
+          cancel_at_period_end?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          plan_id?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          status?: string
+          current_period_start?: string | null
+          current_period_end?: string | null
+          cancel_at_period_end?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      daily_usage: {
+        Row: {
+          id: string
+          user_id: string
+          usage_date: string
+          query_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          usage_date?: string
+          query_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          usage_date?: string
+          query_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_user_query: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
+      get_remaining_queries: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      get_user_daily_limit: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      increment_user_usage: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

@@ -29,6 +29,26 @@ export async function POST(request: Request) {
       )
     }
 
+    // Check quota - use database function
+    const { data: canQuery } = await supabase.rpc('can_user_query', {
+      p_user_id: user.id
+    })
+
+    if (!canQuery) {
+      const { data: remaining } = await supabase.rpc('get_remaining_queries', {
+        p_user_id: user.id
+      })
+
+      return new Response(
+        JSON.stringify({
+          error: 'Dosegli ste dnevno omejitev poizvedb. Nadgradite svoj paket za več poizvedb.',
+          quotaExceeded: true,
+          remaining: remaining || 0
+        }),
+        { status: 429, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
     let userPrompt: string
 
     if (followUpQuestion) {
@@ -80,6 +100,11 @@ export async function POST(request: Request) {
             completion_tokens: Math.ceil(fullContent.length / 4),
             total_tokens: estimatedTokens,
             model: 'gpt-4o',
+          })
+
+          // Increment daily usage
+          await supabase.rpc('increment_user_usage', {
+            p_user_id: user.id
           })
         }
 
