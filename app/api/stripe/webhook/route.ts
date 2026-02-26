@@ -1,187 +1,138 @@
-import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
+// Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
-// Create admin client for webhook (no cookies needed)
-function createAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    }
-  )
-}
+// Create Supabase admin client (bypasses RLS)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export async function POST(request: Request) {
-  const body = await request.text()
-  const headersList = await headers()
-  const signature = headersList.get('stripe-signature')
+  console.log('=== STRIPE WEBHOOK START ===')
+
+  let body: string
+  let signature: string | null
+
+  try {
+    body = await request.text()
+    signature = request.headers.get('stripe-signature')
+    console.log('Got body and signature')
+  } catch (err) {
+    console.error('Failed to read request:', err)
+    return NextResponse.json({ error: 'Failed to read request' }, { status: 400 })
+  }
 
   if (!signature) {
+    console.error('Missing stripe-signature header')
     return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
   }
 
+  // Verify webhook signature
   let event: Stripe.Event
-
   try {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
     )
+    console.log('Signature verified, event type:', event.type)
   } catch (err) {
-    console.error('Webhook signature verification failed:', err)
+    console.error('Signature verification failed:', err)
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
-  const supabase = createAdminClient()
+  // Handle checkout.session.completed
+  if (event.type === 'checkout.session.completed') {
+    try {
+      const session = event.data.object as Stripe.Checkout.Session
+      console.log('Processing checkout session:', session.id)
 
-  console.log('Webhook received:', event.type)
-
-  try {
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session
-        console.log('Checkout session completed:', session.id)
-        console.log('Session metadata:', session.metadata)
-        console.log('Session mode:', session.mode)
-        console.log('Session subscription:', session.subscription)
-
-        if (session.mode === 'subscription' && session.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(
-            session.subscription as string
-          )
-          console.log('Retrieved subscription:', subscription.id)
-
-          const userId = session.metadata?.user_id
-          if (!userId) {
-            console.error('No user_id in session metadata')
-            break
-          }
-          console.log('User ID:', userId)
-
-          // Get the plan based on price ID
-          const priceId = subscription.items.data[0]?.price.id
-          console.log('Price ID:', priceId)
-
-          const { data: plan, error: planError } = await supabase
-            .from('subscription_plans')
-            .select('id')
-            .eq('stripe_price_id', priceId)
-            .single()
-
-          console.log('Plan lookup result:', { plan, planError })
-
-          if (!plan) {
-            console.error('No plan found for price:', priceId)
-            break
-          }
-
-          // Upsert subscription
-          const { data: upsertData, error: upsertError } = await supabase
-            .from('subscriptions')
-            .upsert({
-              user_id: userId,
-              plan_id: plan.id,
-              stripe_customer_id: session.customer as string,
-              stripe_subscription_id: subscription.id,
-              status: 'active',
-              current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-              cancel_at_period_end: subscription.cancel_at_period_end,
-            }, {
-              onConflict: 'user_id'
-            })
-            .select()
-
-          console.log('Upsert result:', { upsertData, upsertError })
-        }
-        break
+      // Only handle subscription mode
+      if (session.mode !== 'subscription') {
+        console.log('Not a subscription, skipping')
+        return NextResponse.json({ received: true })
       }
 
-      case 'customer.subscription.updated': {
-        const subscription = event.data.object as Stripe.Subscription
-
-        // Find user by stripe_subscription_id
-        const { data: existingSub } = await supabase
-          .from('subscriptions')
-          .select('user_id')
-          .eq('stripe_subscription_id', subscription.id)
-          .single()
-
-        if (!existingSub) {
-          console.error('No subscription found for:', subscription.id)
-          break
-        }
-
-        // Get the new plan based on price ID
-        const priceId = subscription.items.data[0]?.price.id
-        const { data: plan } = await supabase
-          .from('subscription_plans')
-          .select('id')
-          .eq('stripe_price_id', priceId)
-          .single()
-
-        // Update subscription
-        await supabase
-          .from('subscriptions')
-          .update({
-            plan_id: plan?.id,
-            status: subscription.status === 'active' ? 'active' : subscription.status,
-            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-            cancel_at_period_end: subscription.cancel_at_period_end,
-          })
-          .eq('stripe_subscription_id', subscription.id)
-        break
+      const userId = session.metadata?.user_id
+      if (!userId) {
+        console.error('No user_id in metadata')
+        return NextResponse.json({ received: true }) // Don't fail, just skip
       }
 
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription
+      const subscriptionId = session.subscription as string
+      const customerId = session.customer as string
 
-        // Get free plan
-        const { data: freePlan } = await supabase
-          .from('subscription_plans')
-          .select('id')
-          .eq('name', 'free')
-          .single()
+      console.log('User:', userId)
+      console.log('Subscription:', subscriptionId)
+      console.log('Customer:', customerId)
 
-        // Downgrade to free plan
-        await supabase
-          .from('subscriptions')
-          .update({
-            plan_id: freePlan?.id,
-            status: 'canceled',
-            stripe_subscription_id: null,
-            cancel_at_period_end: false,
-          })
-          .eq('stripe_subscription_id', subscription.id)
-        break
+      // Get subscription details from Stripe
+      let subscription: Stripe.Subscription
+      try {
+        subscription = await stripe.subscriptions.retrieve(subscriptionId)
+        console.log('Retrieved subscription from Stripe')
+      } catch (err) {
+        console.error('Failed to retrieve subscription:', err)
+        return NextResponse.json({ error: 'Failed to get subscription' }, { status: 500 })
       }
 
-      case 'invoice.payment_failed': {
-        const invoice = event.data.object as Stripe.Invoice
+      const priceId = subscription.items.data[0]?.price.id
+      console.log('Price ID:', priceId)
 
-        if (invoice.subscription) {
-          await supabase
-            .from('subscriptions')
-            .update({ status: 'past_due' })
-            .eq('stripe_subscription_id', invoice.subscription as string)
-        }
-        break
+      // Find matching plan in database
+      const { data: plan, error: planError } = await supabase
+        .from('subscription_plans')
+        .select('id, name')
+        .eq('stripe_price_id', priceId)
+        .single()
+
+      if (planError || !plan) {
+        console.error('Plan lookup failed:', planError)
+        console.error('Price ID not found:', priceId)
+        // Return success anyway - don't block Stripe
+        return NextResponse.json({ received: true, warning: 'Plan not found' })
       }
+
+      console.log('Found plan:', plan.name, plan.id)
+
+      // Prepare subscription data
+      const subscriptionData = {
+        user_id: userId,
+        plan_id: plan.id,
+        stripe_customer_id: customerId,
+        stripe_subscription_id: subscriptionId,
+        status: 'active',
+        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        cancel_at_period_end: subscription.cancel_at_period_end,
+      }
+
+      console.log('Upserting:', JSON.stringify(subscriptionData))
+
+      // Insert or update subscription
+      const { error: upsertError } = await supabase
+        .from('subscriptions')
+        .upsert(subscriptionData, { onConflict: 'user_id' })
+
+      if (upsertError) {
+        console.error('Upsert failed:', upsertError)
+        return NextResponse.json({ error: 'Database error', details: upsertError.message }, { status: 500 })
+      }
+
+      console.log('=== SUBSCRIPTION SAVED SUCCESSFULLY ===')
+
+    } catch (err) {
+      console.error('Checkout handler error:', err)
+      return NextResponse.json({
+        error: 'Handler failed',
+        details: err instanceof Error ? err.message : 'Unknown error'
+      }, { status: 500 })
     }
-
-    return NextResponse.json({ received: true })
-  } catch (error) {
-    console.error('Webhook handler error:', error)
-    return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
   }
+
+  return NextResponse.json({ received: true })
 }
