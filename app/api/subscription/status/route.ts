@@ -54,8 +54,7 @@ export async function GET() {
         canQuery: remaining > 0,
       },
     })
-  } catch (error) {
-    console.error('Subscription status error:', error)
+  } catch {
     return NextResponse.json(
       { error: 'Napaka pri pridobivanju statusa naročnine' },
       { status: 500 }
