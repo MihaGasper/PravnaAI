@@ -12,22 +12,17 @@ const supabase = createClient(
 )
 
 export async function POST(request: Request) {
-  console.log('=== STRIPE WEBHOOK START ===')
-
   let body: string
   let signature: string | null
 
   try {
     body = await request.text()
     signature = request.headers.get('stripe-signature')
-    console.log('Got body and signature')
-  } catch (err) {
-    console.error('Failed to read request:', err)
+  } catch {
     return NextResponse.json({ error: 'Failed to read request' }, { status: 400 })
   }
 
   if (!signature) {
-    console.error('Missing stripe-signature header')
     return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
   }
 
@@ -39,9 +34,7 @@ export async function POST(request: Request) {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
     )
-    console.log('Signature verified, event type:', event.type)
-  } catch (err) {
-    console.error('Signature verification failed:', err)
+  } catch {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
@@ -49,41 +42,29 @@ export async function POST(request: Request) {
   if (event.type === 'checkout.session.completed') {
     try {
       const session = event.data.object as Stripe.Checkout.Session
-      console.log('Processing checkout session:', session.id)
 
       // Only handle subscription mode
       if (session.mode !== 'subscription') {
-        console.log('Not a subscription, skipping')
         return NextResponse.json({ received: true })
       }
 
       const userId = session.metadata?.user_id
       if (!userId) {
-        console.error('No user_id in metadata')
-        return NextResponse.json({ received: true }) // Don't fail, just skip
+        return NextResponse.json({ received: true })
       }
 
       const subscriptionId = session.subscription as string
       const customerId = session.customer as string
 
-      console.log('User:', userId)
-      console.log('Subscription:', subscriptionId)
-      console.log('Customer:', customerId)
-
       // Get subscription details from Stripe
       let subscription: Stripe.Subscription
       try {
         subscription = await stripe.subscriptions.retrieve(subscriptionId)
-        console.log('Retrieved subscription from Stripe')
-      } catch (err) {
-        console.error('Failed to retrieve subscription:', err)
+      } catch {
         return NextResponse.json({ error: 'Failed to get subscription' }, { status: 500 })
       }
 
       const priceId = subscription.items.data[0]?.price.id
-      console.log('Price ID:', priceId)
-      console.log('Period start:', subscription.current_period_start)
-      console.log('Period end:', subscription.current_period_end)
 
       // Find matching plan in database
       const { data: plan, error: planError } = await supabase
@@ -93,22 +74,19 @@ export async function POST(request: Request) {
         .single()
 
       if (planError || !plan) {
-        console.error('Plan lookup failed:', planError)
-        console.error('Price ID not found:', priceId)
-        // Return success anyway - don't block Stripe
         return NextResponse.json({ received: true, warning: 'Plan not found' })
       }
 
-      console.log('Found plan:', plan.name, plan.id)
-
       // Prepare subscription data with safe date handling
-      const periodStart = subscription.current_period_start
-        ? new Date(subscription.current_period_start * 1000).toISOString()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const subData = subscription as any
+      const periodStart = subData.current_period_start
+        ? new Date(subData.current_period_start * 1000).toISOString()
         : new Date().toISOString()
 
-      const periodEnd = subscription.current_period_end
-        ? new Date(subscription.current_period_end * 1000).toISOString()
-        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // +30 days
+      const periodEnd = subData.current_period_end
+        ? new Date(subData.current_period_end * 1000).toISOString()
+        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
       const subscriptionData = {
         user_id: userId,
@@ -121,26 +99,17 @@ export async function POST(request: Request) {
         cancel_at_period_end: subscription.cancel_at_period_end ?? false,
       }
 
-      console.log('Upserting:', JSON.stringify(subscriptionData))
-
       // Insert or update subscription
       const { error: upsertError } = await supabase
         .from('subscriptions')
         .upsert(subscriptionData, { onConflict: 'user_id' })
 
       if (upsertError) {
-        console.error('Upsert failed:', upsertError)
-        return NextResponse.json({ error: 'Database error', details: upsertError.message }, { status: 500 })
+        return NextResponse.json({ error: 'Database error' }, { status: 500 })
       }
 
-      console.log('=== SUBSCRIPTION SAVED SUCCESSFULLY ===')
-
-    } catch (err) {
-      console.error('Checkout handler error:', err)
-      return NextResponse.json({
-        error: 'Handler failed',
-        details: err instanceof Error ? err.message : 'Unknown error'
-      }, { status: 500 })
+    } catch {
+      return NextResponse.json({ error: 'Handler failed' }, { status: 500 })
     }
   }
 

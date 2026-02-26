@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
-import { openai, ASSISTANT_ID } from '@/lib/openai/client'
+import { openai } from '@/lib/openai/client'
 import { createClient } from '@/lib/supabase/server'
+
+const ASSISTANT_ID = process.env.OPENAI_ASSISTANT_ID
 
 export async function POST(
   request: Request,
@@ -73,8 +75,7 @@ export async function POST(
     return NextResponse.json({
       response: responseText,
     })
-  } catch (error) {
-    console.error('Assistant thread API error:', error)
+  } catch {
     return NextResponse.json(
       { error: 'Prišlo je do napake pri obdelavi zahteve' },
       { status: 500 }

@@ -81,7 +81,6 @@ export function DocumentModal({ open, onClose, category, intakeData, aiResponse 
           setDocumentText(fullDocument);
         }
       } catch (err) {
-        console.error("Document generation error:", err);
         setError(err instanceof Error ? err.message : "Napaka pri generiranju dokumenta");
       } finally {
         setLoading(false);

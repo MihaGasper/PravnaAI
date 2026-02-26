@@ -104,7 +104,6 @@ export function ResultCard({ onBack, conversationId, category, intakeData }: Res
           }
         }
       } catch (err) {
-        console.error("API error:", err);
         setError(err instanceof Error ? err.message : "Prišlo je do napake");
         setLoading(false);
       }

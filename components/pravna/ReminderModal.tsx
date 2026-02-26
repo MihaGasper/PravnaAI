@@ -53,7 +53,6 @@ export function ReminderModal({
       showToast("Opomnik nastavljen", `Opomnik za ${dueDate.toLocaleDateString("sl-SI")}`);
       onClose();
     } catch (error) {
-      console.error("Reminder error:", error);
       showToast("Napaka", error instanceof Error ? error.message : "Ni bilo mogoče nastaviti opomnika");
     } finally {
       setLoading(false);

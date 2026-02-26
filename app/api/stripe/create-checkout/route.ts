@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe/client'
 import { createClient } from '@/lib/supabase/server'
+import { getSiteUrl } from '@/lib/utils/url'
 
 export async function POST(request: Request) {
   try {
@@ -54,8 +55,8 @@ export async function POST(request: Request) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?checkout=success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pricing?checkout=canceled`,
+      success_url: `${getSiteUrl()}/dashboard?checkout=success`,
+      cancel_url: `${getSiteUrl()}/pricing?checkout=canceled`,
       metadata: {
         user_id: user.id,
       },
@@ -68,8 +69,7 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json({ url: session.url })
-  } catch (error) {
-    console.error('Checkout error:', error)
+  } catch {
     return NextResponse.json(
       { error: 'Napaka pri ustvarjanju seje za plačilo' },
       { status: 500 }

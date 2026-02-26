@@ -142,8 +142,7 @@ export function useConversation() {
 
       if (err) throw err
       return data
-    } catch (err) {
-      console.error('Failed to add message:', err)
+    } catch {
       return null
     }
   }, [user, supabase])

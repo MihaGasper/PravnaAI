@@ -1,4 +1,5 @@
 import { openai } from '@/lib/openai/client'
+import { OPENAI_CONFIG } from '@/lib/openai/config'
 import { SYSTEM_PROMPT, buildUserPrompt, buildFollowUpPrompt } from '@/lib/openai/prompts'
 import { createClient } from '@/lib/supabase/server'
 
@@ -60,14 +61,14 @@ export async function POST(request: Request) {
     }
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: OPENAI_CONFIG.model,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: userPrompt }
       ],
       stream: true,
-      max_tokens: 2000,
-      temperature: 0.7,
+      max_tokens: OPENAI_CONFIG.maxTokens,
+      temperature: OPENAI_CONFIG.temperature,
     })
 
     // Create a streaming response
@@ -99,7 +100,7 @@ export async function POST(request: Request) {
             prompt_tokens: Math.ceil(userPrompt.length / 4),
             completion_tokens: Math.ceil(fullContent.length / 4),
             total_tokens: estimatedTokens,
-            model: 'gpt-4o',
+            model: OPENAI_CONFIG.model,
           })
 
           // Increment daily usage
@@ -118,8 +119,7 @@ export async function POST(request: Request) {
         'Cache-Control': 'no-cache',
       },
     })
-  } catch (error) {
-    console.error('Chat API error:', error)
+  } catch {
     return new Response(
       JSON.stringify({ error: 'Prišlo je do napake pri obdelavi zahteve' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
