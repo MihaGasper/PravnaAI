@@ -32,9 +32,9 @@ export default function RootLayout({
     <html lang="sl" className={`${_playfair.variable} ${_dmSans.variable}`}>
       <body className="font-sans antialiased">
         <AuthProvider>
-          <Header />
           <DisclaimerProvider>
             <DisclaimerBanner />
+            <Header />
             {children}
           </DisclaimerProvider>
         </AuthProvider>

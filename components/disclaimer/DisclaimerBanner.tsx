@@ -11,7 +11,7 @@ export function DisclaimerBanner({ className }: DisclaimerBannerProps) {
   return (
     <div
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 px-4 py-2.5 bg-accent/10 border-b border-accent/20',
+        'flex items-center justify-center gap-2 px-4 py-2 bg-accent/10 border-b border-accent/20',
         className
       )}
     >

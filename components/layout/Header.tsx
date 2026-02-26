@@ -9,7 +9,7 @@ export function Header() {
   const { user, loading } = useAuthContext()
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur-lg border-b border-border/60">
+    <header className="sticky top-0 z-40 w-full bg-background/90 backdrop-blur-lg border-b border-border/60">
       <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-2.5">
           <Scale className="w-4 h-4 text-accent" />
