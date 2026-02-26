@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Scale, MessageSquare, FileText, Clock, ArrowRight, Zap, Crown } from 'lucide-react'
+import { MessageSquare, FileText, Clock, ArrowRight, Zap, Crown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function DashboardPage() {
@@ -68,16 +68,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 w-full bg-background/90 backdrop-blur-lg border-b border-border/60">
-        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-6">
-          <Link href="/" className="flex items-center gap-2.5">
-            <Scale className="w-4 h-4 text-accent" />
-            <span className="font-serif text-base font-medium text-foreground">PravnaAI</span>
-          </Link>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-4xl px-6 py-8">
         <div className="mb-8">
           <h1 className="font-serif text-2xl text-foreground mb-2">

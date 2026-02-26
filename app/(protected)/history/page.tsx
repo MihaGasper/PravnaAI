@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Scale, ArrowLeft, MessageSquare, Trash2 } from 'lucide-react'
+import { ArrowLeft, MessageSquare } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { ConversationList } from '@/components/pravna/ConversationList'
 
@@ -15,16 +15,6 @@ export default async function HistoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 w-full bg-background/90 backdrop-blur-lg border-b border-border/60">
-        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-6">
-          <Link href="/" className="flex items-center gap-2.5">
-            <Scale className="w-4 h-4 text-accent" />
-            <span className="font-serif text-base font-medium text-foreground">PravnaAI</span>
-          </Link>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-4xl px-6 py-8">
         {/* Back button */}
         <Link

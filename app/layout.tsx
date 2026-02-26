@@ -3,6 +3,7 @@ import { Playfair_Display, DM_Sans } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import { DisclaimerProvider, DisclaimerBanner } from '@/components/disclaimer'
+import { Header } from '@/components/layout/Header'
 import './globals.css'
 
 const _playfair = Playfair_Display({
@@ -31,11 +32,10 @@ export default function RootLayout({
     <html lang="sl" className={`${_playfair.variable} ${_dmSans.variable}`}>
       <body className="font-sans antialiased">
         <AuthProvider>
+          <Header />
           <DisclaimerProvider>
             <DisclaimerBanner />
-            <div className="pt-10">
-              {children}
-            </div>
+            {children}
           </DisclaimerProvider>
         </AuthProvider>
         <Analytics />

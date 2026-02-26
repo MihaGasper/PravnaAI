@@ -28,7 +28,7 @@ const EXAMPLES = [
 
 export function WelcomeScreen({ onSelectMode }: WelcomeScreenProps) {
   return (
-    <div className="min-h-screen flex flex-col px-6 py-12">
+    <div className="flex flex-col px-6 py-8">
       {/* Hero sekcija */}
       <div className="flex-1 flex flex-col items-center justify-center max-w-lg mx-auto w-full">
         <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
