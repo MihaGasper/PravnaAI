@@ -53,24 +53,35 @@ export function WelcomeScreen({ onSelectMode }: WelcomeScreenProps) {
           ))}
         </div>
 
+        {/* CTA Label */}
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+          Izberite način svetovanja
+        </p>
+
         {/* CTA Gumbi */}
         <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md mb-4">
           <button
             onClick={() => onSelectMode("simple")}
-            className="group flex-1 rounded-xl border border-border bg-card px-6 py-5 text-left transition-all duration-200 hover:border-accent/40 hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 touch-manipulation"
+            className="group flex-1 rounded-xl border-2 border-accent/30 bg-accent/5 px-6 py-5 text-left transition-all duration-200 hover:border-accent hover:bg-accent/10 hover:shadow-lg active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 touch-manipulation"
           >
-            <p className="text-sm font-semibold text-foreground mb-1">Preprosto</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-base font-semibold text-foreground">Preprosto</p>
+              <ChevronRight className="w-4 h-4 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
               V enostavnem jeziku, brez pravnih izrazov
             </p>
           </button>
 
           <button
             onClick={() => onSelectMode("expert")}
-            className="group flex-1 rounded-xl border border-border bg-card px-6 py-5 text-left transition-all duration-200 hover:border-accent/40 hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 touch-manipulation"
+            className="group flex-1 rounded-xl border-2 border-accent/30 bg-accent/5 px-6 py-5 text-left transition-all duration-200 hover:border-accent hover:bg-accent/10 hover:shadow-lg active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 touch-manipulation"
           >
-            <p className="text-sm font-semibold text-foreground mb-1">Strokovno</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-base font-semibold text-foreground">Strokovno</p>
+              <ChevronRight className="w-4 h-4 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Pravna analiza s citati zakonov
             </p>
           </button>
