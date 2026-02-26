@@ -82,6 +82,8 @@ export async function POST(request: Request) {
 
       const priceId = subscription.items.data[0]?.price.id
       console.log('Price ID:', priceId)
+      console.log('Period start:', subscription.current_period_start)
+      console.log('Period end:', subscription.current_period_end)
 
       // Find matching plan in database
       const { data: plan, error: planError } = await supabase
@@ -99,16 +101,24 @@ export async function POST(request: Request) {
 
       console.log('Found plan:', plan.name, plan.id)
 
-      // Prepare subscription data
+      // Prepare subscription data with safe date handling
+      const periodStart = subscription.current_period_start
+        ? new Date(subscription.current_period_start * 1000).toISOString()
+        : new Date().toISOString()
+
+      const periodEnd = subscription.current_period_end
+        ? new Date(subscription.current_period_end * 1000).toISOString()
+        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // +30 days
+
       const subscriptionData = {
         user_id: userId,
         plan_id: plan.id,
         stripe_customer_id: customerId,
         stripe_subscription_id: subscriptionId,
         status: 'active',
-        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-        cancel_at_period_end: subscription.cancel_at_period_end,
+        current_period_start: periodStart,
+        current_period_end: periodEnd,
+        cancel_at_period_end: subscription.cancel_at_period_end ?? false,
       }
 
       console.log('Upserting:', JSON.stringify(subscriptionData))
