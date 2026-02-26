@@ -135,13 +135,24 @@ export function WelcomeScreen({ onSelectMode }: WelcomeScreenProps) {
 
       {/* Footer */}
       <footer className="max-w-lg mx-auto w-full mt-8 pt-6 border-t border-border">
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 text-xs text-muted-foreground text-center">
-          <span className="inline-flex items-center gap-1.5">
-            <Shield className="w-3.5 h-3.5" />
-            Vaši podatki so varni
-          </span>
-          <span className="hidden sm:inline">•</span>
-          <span>Ne nadomešča posveta z odvetnikom</span>
+        <div className="flex flex-col items-center gap-3 text-xs text-muted-foreground text-center">
+          <div className="flex items-center gap-4">
+            <span className="inline-flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5" />
+              Vaši podatki so varni
+            </span>
+            <span>•</span>
+            <span>Ne nadomešča posveta z odvetnikom</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/terms" className="hover:text-accent transition-colors">
+              Splošni pogoji
+            </Link>
+            <span>•</span>
+            <Link href="/privacy" className="hover:text-accent transition-colors">
+              Zasebnost
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
