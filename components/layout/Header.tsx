@@ -9,11 +9,13 @@ export function Header() {
   const { user, loading } = useAuthContext()
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-background/90 backdrop-blur-lg border-b border-border/60">
-      <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-6">
-        <Link href="/" className="flex items-center gap-2.5">
-          <Scale className="w-4 h-4 text-accent" />
-          <span className="font-serif text-base font-medium text-foreground">PravnaAI</span>
+    <header className="sticky top-0 z-40 w-full bg-background/95 backdrop-blur-xl border-b border-border/40">
+      <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-6">
+        <Link href="/" className="group flex items-center gap-2.5">
+          <Scale className="w-5 h-5 text-accent transition-transform group-hover:scale-110" />
+          <span className="font-serif text-lg font-medium text-foreground tracking-tight">
+            <span className="text-accent">AI</span>-Odvetnik
+          </span>
         </Link>
 
         {!loading && (
@@ -22,7 +24,7 @@ export function Header() {
           ) : (
             <Link
               href="/auth/login"
-              className="text-sm font-medium text-foreground hover:text-accent transition-colors"
+              className="text-sm font-medium text-foreground/80 hover:text-accent transition-colors px-4 py-2 rounded-lg hover:bg-card/50"
             >
               Prijava
             </Link>

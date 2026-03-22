@@ -18,7 +18,7 @@ type Screen = "welcome" | "categories" | "intake" | "result";
 
 const TRANSITION_MS = 350;
 
-export default function PravnaAIPage() {
+export default function AIodvetnikPage() {
   const router = useRouter();
   const [screen, setScreen] = useState<Screen>("welcome");
   const [nextScreen, setNextScreen] = useState<Screen | null>(null);

@@ -10,7 +10,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-2.5 mb-6">
             <Scale className="w-5 h-5 text-accent" />
-            <span className="font-serif text-xl font-medium text-foreground">PravnaAI</span>
+            <span className="font-serif text-xl font-medium text-foreground">AI-Odvetnik</span>
           </div>
           <h1 className="text-lg font-medium text-foreground mb-1">
             Dobrodošli nazaj

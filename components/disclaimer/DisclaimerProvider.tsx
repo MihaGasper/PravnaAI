@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { DisclaimerModal } from './DisclaimerModal'
 
-const STORAGE_KEY = 'pravnaai-disclaimer-accepted'
+const STORAGE_KEY = 'ai-odvetnik-disclaimer-accepted'
 
 interface DisclaimerContextType {
   hasAccepted: boolean

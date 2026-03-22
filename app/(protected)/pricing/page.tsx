@@ -84,10 +84,10 @@ export default function PricingPage() {
           <p className="text-sm text-muted-foreground">
             Vprašanja? Pišite nam na{' '}
             <a
-              href="mailto:podpora@pravna.ai"
+              href="mailto:podpora@ai-odvetnik.si"
               className="text-accent hover:underline"
             >
-              podpora@pravna.ai
+              podpora@ai-odvetnik.si
             </a>
           </p>
         </div>

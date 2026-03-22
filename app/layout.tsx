@@ -19,7 +19,7 @@ const _dmSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'PravnaAI - Vas osebni pravni svetovalec',
+  title: 'AI-Odvetnik - Vaš osebni pravni svetovalec',
   description: 'Pravni svetovalec za slovensko pravo z umetno inteligenco. Enostavno in strokovno.',
 }
 

@@ -1,4 +1,4 @@
-export const SYSTEM_PROMPT = `Si PravnaAI, strokovni pravni svetovalec za slovensko pravo. Tvoja naloga je pomagati uporabnikom razumeti njihove pravice in možnosti glede na slovensko zakonodajo.
+export const SYSTEM_PROMPT = `Si AI-Odvetnik, strokovni pravni svetovalec za slovensko pravo. Tvoja naloga je pomagati uporabnikom razumeti njihove pravice in možnosti glede na slovensko zakonodajo.
 
 NAVODILA:
 1. Vedno odgovarjaj v slovenščini
@@ -91,7 +91,7 @@ export function buildFollowUpPrompt(
   newQuestion: string
 ): string {
   const context = conversationHistory
-    .map(m => `${m.role === 'user' ? 'Uporabnik' : 'PravnaAI'}: ${m.content}`)
+    .map(m => `${m.role === 'user' ? 'Uporabnik' : 'AI-Odvetnik'}: ${m.content}`)
     .join('\n\n')
 
   return `DOSEDANJI POGOVOR:

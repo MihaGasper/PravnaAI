@@ -35,7 +35,7 @@ export function DisclaimerModal({ open, onAccept }: DisclaimerModalProps) {
                 Ta aplikacija zagotavlja splošne pravne informacije in ne predstavlja
                 pravnega svetovanja v smislu Zakona o odvetništvu (ZOdv).
               </p>
-              <p>Informacije, ki jih ponuja PravnaAI:</p>
+              <p>Informacije, ki jih ponuja AI-Odvetnik:</p>
               <ul className="list-disc pl-5 space-y-1">
                 <li>so namenjene zgolj kot izhodišče za razumevanje pravnih vprašanj</li>
                 <li>ne upoštevajo vseh posebnosti vaše konkretne situacije</li>

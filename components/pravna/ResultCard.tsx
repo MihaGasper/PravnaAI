@@ -278,7 +278,7 @@ export function ResultCard({ onBack, conversationId, category, intakeData }: Res
 
         {/* Disclaimer */}
         <p className="text-[11px] text-muted-foreground leading-relaxed text-center px-4 pb-4">
-          {"PravnaAI nudi splošne pravne informacije in ne nadomešča posveta z odvetnikom. Za individualno pravno svetovanje se obrnite na odvetnika."}
+          {"AI-Odvetnik nudi splošne pravne informacije in ne nadomešča posveta z odvetnikom. Za individualno pravno svetovanje se obrnite na odvetnika."}
         </p>
       </div>
 

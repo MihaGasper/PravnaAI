@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Politika zasebnosti | PravnaAI',
-  description: 'Politika zasebnosti platforme PravnaAI',
+  title: 'Politika zasebnosti | AI-Odvetnik',
+  description: 'Politika zasebnosti platforme AI-Odvetnik',
 }
 
 export default function PrivacyPage() {
@@ -20,8 +20,8 @@ export default function PrivacyPage() {
           {/* Uvod */}
           <section className="mb-8">
             <p className="text-muted-foreground leading-relaxed">
-              Ta politika zasebnosti pojasnjuje, kako [IME PODJETJA] (v nadaljevanju: &quot;mi&quot;, &quot;nas&quot;)
-              zbira, uporablja in varuje vaše osebne podatke pri uporabi platforme PravnaAI.
+              Ta politika zasebnosti pojasnjuje, kako 2DSOFT d.o.o. (v nadaljevanju: &quot;mi&quot;, &quot;nas&quot;)
+              zbira, uporablja in varuje vaše osebne podatke pri uporabi platforme AI-Odvetnik.
               Vaša zasebnost nam je pomembna in zavezani smo k njeni zaščiti.
             </p>
           </section>
@@ -31,10 +31,10 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold mb-4">1. Upravljavec osebnih podatkov</h2>
             <p className="text-muted-foreground leading-relaxed">
               Upravljavec vaših osebnih podatkov je:<br />
-              [IME PODJETJA]<br />
-              [NASLOV]<br />
-              [DAVČNA ŠTEVILKA]<br />
-              E-pošta: <a href="mailto:podpora@pravna.ai" className="text-accent hover:underline">podpora@pravna.ai</a>
+              2DSOFT d.o.o.<br />
+              Gorenjska cesta 24, 1234 Mengeš<br />
+              Davčna št.: SI20482566, Matična št.: 8813043000<br />
+              E-pošta: <a href="mailto:podpora@ai-odvetnik.si" className="text-accent hover:underline">podpora@ai-odvetnik.si</a>
             </p>
           </section>
 
@@ -141,7 +141,7 @@ export default function PrivacyPage() {
             </ul>
             <p className="mt-3 text-muted-foreground leading-relaxed">
               Za uveljavljanje svojih pravic nas kontaktirajte na{' '}
-              <a href="mailto:podpora@pravna.ai" className="text-accent hover:underline">podpora@pravna.ai</a>.
+              <a href="mailto:podpora@ai-odvetnik.si" className="text-accent hover:underline">podpora@ai-odvetnik.si</a>.
             </p>
           </section>
 
@@ -192,7 +192,7 @@ export default function PrivacyPage() {
             </p>
           </section>
 
-          {/* 9. Avtomatizirano odločanje in profiliranje */}
+          {/* 9. Avtomatizirano odločanje in AI obdelava */}
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-4">9. Avtomatizirano odločanje in AI obdelava</h2>
             <p className="mb-3 text-muted-foreground leading-relaxed">
@@ -205,6 +205,21 @@ export default function PrivacyPage() {
               <li><strong className="text-foreground">Brez profiliranja</strong> - ne izvajamo profiliranja za namene avtomatiziranega odločanja</li>
               <li><strong className="text-foreground">Človeški nadzor</strong> - vse informacije so informativne narave in zahtevajo vašo lastno presojo</li>
             </ul>
+
+            {/* AI-specific data processing details */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 my-4">
+              <p className="text-blue-800 text-sm font-medium mb-2">
+                PODROBNOSTI O AI OBDELAVI PODATKOV
+              </p>
+              <ul className="text-blue-700 text-sm space-y-2">
+                <li>• <strong>Ponudnik AI:</strong> Vaša vprašanja se posredujejo ponudniku AI storitev (OpenAI, LLC) za generiranje odgovorov.</li>
+                <li>• <strong>Brez učenja na vaših podatkih:</strong> Vaši podatki se NE uporabljajo za učenje ali izboljšanje AI modelov. Uporabljamo OpenAI API z onemogočenim učenjem (data retention: zero-day).</li>
+                <li>• <strong>Minimizacija podatkov:</strong> OpenAI prejme samo vsebino vaših poizvedb, ne pa vaših identifikacijskih podatkov (e-pošta, ime).</li>
+                <li>• <strong>DPA pogodba:</strong> Z OpenAI imamo sklenjeno pogodbo o obdelavi podatkov (DPA), ki zagotavlja GDPR skladnost.</li>
+                <li>• <strong>Hramba pogovorov:</strong> Zgodovina vaših pogovorov se hrani na naših strežnikih do izbrisa računa ali ročnega izbrisa.</li>
+              </ul>
+            </div>
+
             <p className="mt-3 text-muted-foreground leading-relaxed">
               AI generirani odgovori so namenjeni izključno informiranju in ne predstavljajo pravnega svetovanja.
               Za konkretne pravne zadeve se vedno posvetujte z usposobljenim odvetnikom.
@@ -271,8 +286,8 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold mb-4">14. Kontakt</h2>
             <p className="text-muted-foreground leading-relaxed">
               Za vprašanja v zvezi z zasebnostjo nas kontaktirajte na:{' '}
-              <a href="mailto:podpora@pravna.ai" className="text-accent hover:underline">
-                podpora@pravna.ai
+              <a href="mailto:podpora@ai-odvetnik.si" className="text-accent hover:underline">
+                podpora@ai-odvetnik.si
               </a>
             </p>
           </section>
