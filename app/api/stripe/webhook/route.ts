@@ -159,9 +159,13 @@ export async function POST(request: Request) {
         ? new Date(subData.current_period_end * 1000).toISOString()
         : undefined
 
+      // Stripe can use either cancel_at_period_end or cancel_at to schedule cancellation
+      const cancelAt = subData.cancel_at
+      const isCanceling = subscription.cancel_at_period_end || !!cancelAt
+
       const updateData: Record<string, unknown> = {
         status: statusMap[subscription.status] || subscription.status,
-        cancel_at_period_end: subscription.cancel_at_period_end ?? false,
+        cancel_at_period_end: isCanceling,
       }
 
       if (plan) {

@@ -24,12 +24,22 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if user already has a Stripe customer ID
+    // Check if user already has a subscription
     const { data: existingSub } = await supabase
       .from('subscriptions')
-      .select('stripe_customer_id')
+      .select('stripe_customer_id, status, plan:subscription_plans(stripe_price_id)')
       .eq('user_id', user.id)
       .single()
+
+    // Block purchase if user already has an active subscription with the same plan
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const existingPriceId = (existingSub?.plan as any)?.stripe_price_id
+    if (existingSub?.status === 'active' && existingPriceId === priceId) {
+      return NextResponse.json(
+        { error: 'Že imate aktiven paket. Za spremembo uporabite upravljanje naročnine.' },
+        { status: 400 }
+      )
+    }
 
     let customerId = existingSub?.stripe_customer_id
 
