@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { MessageSquare, FileText, Clock, ArrowRight, Zap, Crown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { ManageSubscriptionButton } from '@/components/subscription/ManageSubscriptionButton'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -117,13 +118,17 @@ export default async function DashboardPage() {
               <p className="text-xs text-destructive">
                 Dosegli ste dnevno omejitev
               </p>
-              <Link
-                href="/pricing"
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:underline"
-              >
-                <Crown className="w-3.5 h-3.5" />
-                Nadgradi paket
-              </Link>
+              {plan?.name === 'free' ? (
+                <Link
+                  href="/pricing"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:underline"
+                >
+                  <Crown className="w-3.5 h-3.5" />
+                  Nadgradi paket
+                </Link>
+              ) : (
+                <ManageSubscriptionButton />
+              )}
             </div>
           ) : plan?.name === 'free' ? (
             <div className="flex items-center justify-between">
@@ -139,9 +144,12 @@ export default async function DashboardPage() {
               </Link>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground">
-              Kvota se ponastavi vsak dan ob polnoči
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Kvota se ponastavi vsak dan ob polnoči
+              </p>
+              <ManageSubscriptionButton />
+            </div>
           )}
         </div>
 

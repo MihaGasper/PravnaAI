@@ -113,5 +113,119 @@ export async function POST(request: Request) {
     }
   }
 
+  // Handle subscription updated (upgrade, downgrade, renewal, cancel scheduled)
+  if (event.type === 'customer.subscription.updated') {
+    try {
+      const subscription = event.data.object as Stripe.Subscription
+      const subscriptionId = subscription.id
+
+      // Find existing subscription in database
+      const { data: existingSub } = await supabase
+        .from('subscriptions')
+        .select('user_id')
+        .eq('stripe_subscription_id', subscriptionId)
+        .single()
+
+      if (!existingSub) {
+        return NextResponse.json({ received: true, warning: 'Subscription not found in DB' })
+      }
+
+      const priceId = subscription.items.data[0]?.price.id
+
+      // Find matching plan
+      const { data: plan } = await supabase
+        .from('subscription_plans')
+        .select('id, name')
+        .eq('stripe_price_id', priceId)
+        .single()
+
+      // Map Stripe status to our status
+      const statusMap: Record<string, string> = {
+        active: 'active',
+        past_due: 'past_due',
+        canceled: 'canceled',
+        unpaid: 'unpaid',
+        incomplete: 'incomplete',
+        incomplete_expired: 'canceled',
+        trialing: 'active',
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const subData = subscription as any
+      const periodStart = subData.current_period_start
+        ? new Date(subData.current_period_start * 1000).toISOString()
+        : undefined
+      const periodEnd = subData.current_period_end
+        ? new Date(subData.current_period_end * 1000).toISOString()
+        : undefined
+
+      const updateData: Record<string, unknown> = {
+        status: statusMap[subscription.status] || subscription.status,
+        cancel_at_period_end: subscription.cancel_at_period_end ?? false,
+      }
+
+      if (plan) {
+        updateData.plan_id = plan.id
+      }
+      if (periodStart) {
+        updateData.current_period_start = periodStart
+      }
+      if (periodEnd) {
+        updateData.current_period_end = periodEnd
+      }
+
+      const { error: updateError } = await supabase
+        .from('subscriptions')
+        .update(updateData)
+        .eq('stripe_subscription_id', subscriptionId)
+
+      if (updateError) {
+        return NextResponse.json({ error: 'Database error' }, { status: 500 })
+      }
+    } catch {
+      return NextResponse.json({ error: 'Handler failed' }, { status: 500 })
+    }
+  }
+
+  // Handle subscription deleted (canceled immediately or at period end)
+  if (event.type === 'customer.subscription.deleted') {
+    try {
+      const subscription = event.data.object as Stripe.Subscription
+      const subscriptionId = subscription.id
+
+      const { error: deleteError } = await supabase
+        .from('subscriptions')
+        .update({ status: 'canceled', cancel_at_period_end: false })
+        .eq('stripe_subscription_id', subscriptionId)
+
+      if (deleteError) {
+        return NextResponse.json({ error: 'Database error' }, { status: 500 })
+      }
+    } catch {
+      return NextResponse.json({ error: 'Handler failed' }, { status: 500 })
+    }
+  }
+
+  // Handle failed payment
+  if (event.type === 'invoice.payment_failed') {
+    try {
+      const invoice = event.data.object as Stripe.Invoice
+      const subscriptionId = invoice.subscription as string
+
+      if (subscriptionId) {
+        const { error: updateError } = await supabase
+          .from('subscriptions')
+          .update({ status: 'past_due' })
+          .eq('stripe_subscription_id', subscriptionId)
+
+        if (updateError) {
+          return NextResponse.json({ error: 'Database error' }, { status: 500 })
+        }
+      }
+    } catch {
+      return NextResponse.json({ error: 'Handler failed' }, { status: 500 })
+    }
+  }
+
   return NextResponse.json({ received: true })
 }

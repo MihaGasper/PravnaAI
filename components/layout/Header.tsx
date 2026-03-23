@@ -18,18 +18,26 @@ export function Header() {
           </span>
         </Link>
 
-        {!loading && (
-          user ? (
-            <UserMenu />
-          ) : (
-            <Link
-              href="/auth/login"
-              className="text-sm font-medium text-foreground/80 hover:text-accent transition-colors px-4 py-2 rounded-lg hover:bg-card/50"
-            >
-              Prijava
-            </Link>
-          )
-        )}
+        <div className="flex items-center gap-1">
+          <Link
+            href="/blog"
+            className="text-sm font-medium text-foreground/80 hover:text-accent transition-colors px-4 py-2 rounded-lg hover:bg-card/50"
+          >
+            Nasveti
+          </Link>
+          {!loading && (
+            user ? (
+              <UserMenu />
+            ) : (
+              <Link
+                href="/auth/login"
+                className="text-sm font-medium text-foreground/80 hover:text-accent transition-colors px-4 py-2 rounded-lg hover:bg-card/50"
+              >
+                Prijava
+              </Link>
+            )
+          )}
+        </div>
       </div>
     </header>
   )
