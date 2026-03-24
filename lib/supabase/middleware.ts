@@ -43,10 +43,13 @@ export async function updateSession(request: NextRequest) {
     '/auth/login',
     '/auth/signup',
     '/auth/callback',
-    '/api/stripe/webhook',  // Stripe webhook must be public
+    '/api/',                // All API routes (webhooks, etc.)
     '/pricing',             // Pricing page is public
     '/terms',               // Terms of service - public
     '/privacy',             // Privacy policy - public
+    '/blog',                // Blog pages - public for SEO
+    '/sitemap.xml',         // Sitemap for search engines
+    '/robots.txt',          // Robots for search engines
   ]
 
   // Check if path is public (exact match for '/' or starts with public path)
