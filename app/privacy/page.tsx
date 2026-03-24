@@ -1,8 +1,11 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Politika zasebnosti | AI-Odvetnik',
-  description: 'Politika zasebnosti platforme AI-Odvetnik',
+  title: 'Politika zasebnosti',
+  description: 'Politika zasebnosti platforme AI-Odvetnik. Kako zbiramo, uporabljamo in varujemo vaše osebne podatke.',
+  alternates: {
+    canonical: 'https://aiodvetnik.si/privacy',
+  },
 }
 
 export default function PrivacyPage() {

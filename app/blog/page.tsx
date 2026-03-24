@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { BlogArticle } from '@/lib/blog/articles'
 
 export const metadata: Metadata = {
-  title: 'Pravni nasveti in vodniki | AI-Odvetnik',
+  title: 'Pravni nasveti in vodniki',
   description: 'Brezplačni pravni nasveti, vodniki in članki o slovenskem pravu. Dedovanje, delovno pravo, ločitev, nepremičnine in več.',
   keywords: [
     'pravni nasveti',
@@ -15,6 +15,16 @@ export const metadata: Metadata = {
     'pravni vodnik',
     'AI odvetnik blog',
   ],
+  alternates: {
+    canonical: 'https://aiodvetnik.si/blog',
+  },
+  openGraph: {
+    title: 'Pravni nasveti in vodniki | AI-Odvetnik',
+    description: 'Brezplačni pravni nasveti, vodniki in članki o slovenskem pravu.',
+    type: 'website',
+    locale: 'sl_SI',
+    url: 'https://aiodvetnik.si/blog',
+  },
 }
 
 export const revalidate = 3600 // revalidate every hour

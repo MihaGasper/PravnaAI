@@ -15,17 +15,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params
   const supabase = await createClient()
 
-  const { data: article } = await supabase
+  const { data } = await supabase
     .from('blog_posts')
     .select('title, description, keywords, published_at')
     .eq('slug', slug)
     .eq('published', true)
     .single()
 
+  const article = data as unknown as Pick<BlogArticle, 'title' | 'description' | 'keywords' | 'published_at'> | null
   if (!article) return {}
 
   return {
-    title: `${article.title} | AI-Odvetnik`,
+    title: article.title,
     description: article.description,
     keywords: article.keywords,
     openGraph: {
@@ -34,6 +35,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: 'article',
       publishedTime: article.published_at ?? undefined,
       siteName: 'AI-Odvetnik',
+      locale: 'sl_SI',
+      url: `https://aiodvetnik.si/blog/${slug}`,
+    },
+    twitter: {
+      card: 'summary',
+      title: article.title,
+      description: article.description,
+    },
+    alternates: {
+      canonical: `https://aiodvetnik.si/blog/${slug}`,
     },
   }
 }
@@ -112,8 +123,40 @@ export default async function BlogArticlePage({ params }: PageProps) {
 
   const article = data as unknown as BlogArticle
 
+  const articleJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: article.title,
+    description: article.description,
+    datePublished: article.published_at,
+    dateModified: article.updated_at,
+    author: {
+      '@type': 'Organization',
+      name: 'AI-Odvetnik',
+      url: 'https://aiodvetnik.si',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'AI-Odvetnik',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://aiodvetnik.si/icon.svg',
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://aiodvetnik.si/blog/${slug}`,
+    },
+    inLanguage: 'sl',
+    keywords: article.keywords?.join(', '),
+  }
+
   return (
     <div className="min-h-screen bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
       <main className="mx-auto max-w-3xl px-6 py-12">
         <Link
           href="/blog"

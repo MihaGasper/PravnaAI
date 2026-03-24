@@ -1,8 +1,11 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Splošni pogoji uporabe | AI-Odvetnik',
-  description: 'Splošni pogoji uporabe platforme AI-Odvetnik',
+  title: 'Splošni pogoji uporabe',
+  description: 'Splošni pogoji uporabe platforme AI-Odvetnik. Pravila uporabe AI pravnega svetovalca.',
+  alternates: {
+    canonical: 'https://aiodvetnik.si/terms',
+  },
 }
 
 export default function TermsPage() {
