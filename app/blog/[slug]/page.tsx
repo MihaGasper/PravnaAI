@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Clock, Calendar, Scale } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Clock, Calendar, Scale, ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import type { BlogArticle, BlogSection } from '@/lib/blog/articles'
 
@@ -106,6 +106,48 @@ function renderSection(section: BlogSection, index: number) {
   }
 }
 
+function buildFaqJsonLd(sections: BlogSection[]) {
+  const faqItems: { question: string; answer: string }[] = []
+
+  for (let i = 0; i < sections.length; i++) {
+    const section = sections[i]
+    // Detect FAQ-style paragraphs (start with question pattern)
+    if (
+      section.type === 'paragraph' &&
+      (section.content.startsWith('Ali ') ||
+        section.content.startsWith('Kako ') ||
+        section.content.startsWith('Kdaj ') ||
+        section.content.startsWith('Koliko ') ||
+        section.content.startsWith('Kdo ') ||
+        section.content.startsWith('Kaj '))
+    ) {
+      const questionMatch = section.content.match(/^([^?]+\?)/)
+      if (questionMatch) {
+        const question = questionMatch[1]
+        const answer = section.content.slice(question.length).trim()
+        if (answer) {
+          faqItems.push({ question, answer })
+        }
+      }
+    }
+  }
+
+  if (faqItems.length === 0) return null
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
+    })),
+  }
+}
+
 export default async function BlogArticlePage({ params }: PageProps) {
   const { slug } = await params
   const supabase = await createClient()
@@ -123,6 +165,17 @@ export default async function BlogArticlePage({ params }: PageProps) {
 
   const article = data as unknown as BlogArticle
 
+  // Fetch related articles (same category, exclude current)
+  const { data: relatedData } = await supabase
+    .from('blog_posts')
+    .select('slug, title, category, reading_time, published_at')
+    .eq('published', true)
+    .neq('slug', slug)
+    .limit(3)
+
+  const relatedArticles = (relatedData || []) as unknown as Pick<BlogArticle, 'slug' | 'title' | 'category' | 'reading_time' | 'published_at'>[]
+
+  // Article JSON-LD
   const articleJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -151,20 +204,60 @@ export default async function BlogArticlePage({ params }: PageProps) {
     keywords: article.keywords?.join(', '),
   }
 
+  // Breadcrumb JSON-LD
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Domov',
+        item: 'https://aiodvetnik.si',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Nasveti',
+        item: 'https://aiodvetnik.si/blog',
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: article.title,
+        item: `https://aiodvetnik.si/blog/${slug}`,
+      },
+    ],
+  }
+
+  // FAQ JSON-LD
+  const faqJsonLd = buildFaqJsonLd(article.content)
+
   return (
     <div className="min-h-screen bg-background">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <Link
-          href="/blog"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-accent transition-colors mb-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Nazaj na nasvete
-        </Link>
+        {/* Breadcrumbs */}
+        <nav className="flex items-center gap-1.5 text-xs text-muted-foreground mb-8">
+          <Link href="/" className="hover:text-accent transition-colors">Domov</Link>
+          <ChevronRight className="w-3 h-3" />
+          <Link href="/blog" className="hover:text-accent transition-colors">Nasveti</Link>
+          <ChevronRight className="w-3 h-3" />
+          <span className="text-foreground/70 truncate max-w-[200px]">{article.title}</span>
+        </nav>
 
         <article>
           <header className="mb-8">
@@ -202,7 +295,34 @@ export default async function BlogArticlePage({ params }: PageProps) {
           </div>
         </article>
 
-        <div className="border-t border-border mt-12 pt-8">
+        {/* Related articles */}
+        {relatedArticles.length > 0 && (
+          <div className="border-t border-border mt-12 pt-8">
+            <h2 className="text-sm font-medium text-foreground mb-4">Povezani članki</h2>
+            <div className="flex flex-col gap-3">
+              {relatedArticles.map((related) => (
+                <Link
+                  key={related.slug}
+                  href={`/blog/${related.slug}`}
+                  className="group flex items-center justify-between rounded-xl border border-border bg-card p-4 transition-colors hover:bg-secondary/50"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate group-hover:text-accent transition-colors">
+                      {related.title}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-muted-foreground">{related.category}</span>
+                      <span className="text-xs text-muted-foreground">{related.reading_time}</span>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0 ml-3 transition-transform group-hover:translate-x-1" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="border-t border-border mt-8 pt-8">
           <p className="text-xs text-muted-foreground">
             Ta članek je informativne narave in ne predstavlja pravnega svetovanja.
             Za konkretne pravne nasvete se posvetujte z odvetnikom.

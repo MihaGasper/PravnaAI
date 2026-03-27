@@ -25,6 +25,12 @@ export function Header() {
           >
             Nasveti
           </Link>
+          <Link
+            href="/pricing"
+            className="text-sm font-medium text-foreground/80 hover:text-accent transition-colors px-4 py-2 rounded-lg hover:bg-card/50"
+          >
+            Cenik
+          </Link>
           {!loading && (
             user ? (
               <UserMenu />

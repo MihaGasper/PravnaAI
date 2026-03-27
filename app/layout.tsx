@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import { DisclaimerProvider, DisclaimerBanner } from '@/components/disclaimer'
 import { Header } from '@/components/layout/Header'
+import { Footer } from '@/components/layout/Footer'
 import './globals.css'
 
 const _playfair = Playfair_Display({
@@ -151,6 +152,7 @@ export default function RootLayout({
             <DisclaimerBanner />
             <Header />
             {children}
+            <Footer />
           </DisclaimerProvider>
         </AuthProvider>
         <Analytics />
