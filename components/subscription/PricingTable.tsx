@@ -101,8 +101,8 @@ export function PricingTable({ plans }: PricingTableProps) {
       </div>
 
       {/* Subscription plans */}
-      <div className="grid gap-6 md:grid-cols-3">
-        {plans.map((plan) => (
+      <div className="grid gap-6 md:grid-cols-2 max-w-2xl mx-auto">
+        {plans.filter((plan) => plan.name !== 'free').map((plan) => (
           <PricingCard
             key={plan.id}
             name={plan.name}
