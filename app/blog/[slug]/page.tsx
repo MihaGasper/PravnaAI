@@ -91,12 +91,20 @@ function renderSection(section: BlogSection, index: number) {
             </div>
             <div>
               <p className="text-foreground font-medium mb-3">{section.content}</p>
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 bg-accent text-background text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-accent/90 transition-colors"
-              >
-                Preizkusite brezplačno
-              </Link>
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  href="/pricing"
+                  className="inline-flex items-center gap-2 bg-accent text-background text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-accent/90 transition-colors"
+                >
+                  Preverite svojo situacijo — od 9,99 €
+                </Link>
+                <Link
+                  href="/"
+                  className="text-sm text-accent hover:underline transition-colors"
+                >
+                  ali brezplačna poizvedba
+                </Link>
+              </div>
             </div>
           </div>
         </div>

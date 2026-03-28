@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { MessageSquare, Shield, Clock } from 'lucide-react'
 import { PricingTable } from '@/components/subscription/PricingTable'
 import { UsageDisplay } from '@/components/subscription/UsageDisplay'
 
@@ -79,8 +80,47 @@ export default function PricingPage() {
           <PricingTable plans={plans} />
         )}
 
-        {/* FAQ or additional info */}
-        <div className="mt-16 text-center">
+        {/* Social proof */}
+        <div className="mt-16 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
+            <div className="flex flex-col items-center text-center p-4">
+              <MessageSquare className="w-5 h-5 text-accent mb-2" />
+              <p className="text-2xl font-bold text-foreground">1.000+</p>
+              <p className="text-xs text-muted-foreground">pravnih vprašanj rešenih</p>
+            </div>
+            <div className="flex flex-col items-center text-center p-4">
+              <Clock className="w-5 h-5 text-accent mb-2" />
+              <p className="text-2xl font-bold text-foreground">&lt; 30s</p>
+              <p className="text-xs text-muted-foreground">povprečen čas odgovora</p>
+            </div>
+            <div className="flex flex-col items-center text-center p-4">
+              <Shield className="w-5 h-5 text-accent mb-2" />
+              <p className="text-2xl font-bold text-foreground">24/7</p>
+              <p className="text-xs text-muted-foreground">dostop brez čakanja</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Testimonials */}
+        <div className="max-w-3xl mx-auto mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="rounded-xl border border-border bg-card p-5">
+              <p className="text-sm text-foreground leading-relaxed mb-3">
+                &ldquo;V 5 minutah sem razumel svoje pravice pri odpovedi. Odvetnik bi mi za isto povedal po eni uri in za 100 EUR.&rdquo;
+              </p>
+              <p className="text-xs text-muted-foreground">— uporabnik, delovno pravo</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-5">
+              <p className="text-sm text-foreground leading-relaxed mb-3">
+                &ldquo;Pogodbo sem pregledal z AI-Odvetnikom preden sem šel k notarju. Opozoril me je na klavzulo, ki bi me stala tisoče.&rdquo;
+              </p>
+              <p className="text-xs text-muted-foreground">— uporabnik, nepremičnine</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Contact */}
+        <div className="text-center">
           <p className="text-sm text-muted-foreground">
             Vprašanja? Pišite nam na{' '}
             <a
