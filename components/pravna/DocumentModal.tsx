@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Download, Copy, Loader2 } from "lucide-react";
+import { X, Download, Copy, Loader2, Lock, Zap } from "lucide-react";
+import Link from "next/link";
 import { showToast } from "./Toast";
 import type { Category } from "./CategoryGrid";
 import type { IntakeData } from "./GuidedIntake";
@@ -12,6 +13,7 @@ interface DocumentModalProps {
   category?: Category;
   intakeData?: IntakeData;
   aiResponse?: string;
+  isFreePlan?: boolean;
 }
 
 // Template for document generation
@@ -38,7 +40,7 @@ NAVODILA ZA GENERIRANJE DOKUMENTA:
 Generiraj samo dokument brez dodatnih pojasnil.`;
 }
 
-export function DocumentModal({ open, onClose, category, intakeData, aiResponse }: DocumentModalProps) {
+export function DocumentModal({ open, onClose, category, intakeData, aiResponse, isFreePlan = false }: DocumentModalProps) {
   const [documentText, setDocumentText] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -165,9 +167,44 @@ export function DocumentModal({ open, onClose, category, intakeData, aiResponse 
           )}
 
           {!loading && !error && documentText && (
-            <pre className="font-sans text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-              {documentText}
-            </pre>
+            <div className="relative">
+              <pre
+                className={`font-sans text-sm text-foreground whitespace-pre-wrap leading-relaxed ${
+                  isFreePlan ? "max-h-[200px] overflow-hidden" : ""
+                }`}
+              >
+                {documentText}
+              </pre>
+              {isFreePlan && (
+                <div className="absolute bottom-0 left-0 right-0">
+                  <div className="h-24 bg-gradient-to-t from-card via-card/95 to-transparent" />
+                  <div className="bg-card pt-1 flex flex-col items-center gap-2">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Lock className="w-3.5 h-3.5" />
+                      <span className="text-xs font-medium">Celoten dokument z nadgradnjo</span>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const res = await fetch('/api/stripe/create-pack-checkout', { method: 'POST' });
+                          if (res.ok) { const { url } = await res.json(); window.location.href = url; }
+                        } catch {}
+                      }}
+                      className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2 text-sm font-medium text-background hover:bg-accent/90 transition-colors"
+                    >
+                      <Zap className="w-3.5 h-3.5" />
+                      Dnevna vstopnica — 9,99 €
+                    </button>
+                    <Link
+                      href="/pricing"
+                      className="text-[11px] text-muted-foreground hover:text-accent transition-colors mb-1"
+                    >
+                      ali mesečni paket že od 19,99 €/mesec
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {!loading && !error && !documentText && !category && (
@@ -178,24 +215,32 @@ export function DocumentModal({ open, onClose, category, intakeData, aiResponse 
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 px-5 py-4 border-t border-border">
-          <button
-            onClick={handleDownload}
-            disabled={!documentText || loading}
-            className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
-          >
-            <Download className="w-3.5 h-3.5" />
-            {"Prenesi"}
-          </button>
-          <button
-            onClick={handleCopy}
-            disabled={!documentText || loading}
-            className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-2.5 text-sm font-medium text-foreground hover:bg-border transition-colors disabled:opacity-50"
-          >
-            <Copy className="w-3.5 h-3.5" />
-            {"Kopiraj"}
-          </button>
-        </div>
+        {isFreePlan ? (
+          <div className="px-5 py-3 border-t border-border">
+            <p className="text-[11px] text-muted-foreground text-center">
+              Prenos in kopiranje sta na voljo z nadgradnjo paketa.
+            </p>
+          </div>
+        ) : (
+          <div className="flex gap-2 px-5 py-4 border-t border-border">
+            <button
+              onClick={handleDownload}
+              disabled={!documentText || loading}
+              className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              <Download className="w-3.5 h-3.5" />
+              {"Prenesi"}
+            </button>
+            <button
+              onClick={handleCopy}
+              disabled={!documentText || loading}
+              className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-2.5 text-sm font-medium text-foreground hover:bg-border transition-colors disabled:opacity-50"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              {"Kopiraj"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

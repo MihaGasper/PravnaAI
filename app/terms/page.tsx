@@ -283,8 +283,8 @@ export default function TermsPage() {
             </p>
             <p className="text-muted-foreground leading-relaxed">
               Za vprašanja v zvezi s temi pogoji nas kontaktirajte na: {' '}
-              <a href="mailto:podpora@ai-odvetnik.si" className="text-accent hover:underline">
-                podpora@ai-odvetnik.si
+              <a href="mailto:markobtc@gmail.com" className="text-accent hover:underline">
+                markobtc@gmail.com
               </a>
             </p>
           </section>

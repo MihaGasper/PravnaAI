@@ -302,9 +302,16 @@ export function ResultCard({ onBack, conversationId, category, intakeData }: Res
           <ArrowLeft className="w-4 h-4 text-muted-foreground" />
         </button>
         <div>
-          <h2 className="font-serif text-xl text-foreground">
-            {"Analiza primera"}
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-serif text-xl text-foreground">
+              {"Analiza primera"}
+            </h2>
+            {isFreePlan && (
+              <span className="text-[10px] font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full">
+                Brezplačno
+              </span>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground">
             {category.label} • Na podlagi slovenskega prava
           </p>
@@ -353,44 +360,44 @@ export function ResultCard({ onBack, conversationId, category, intakeData }: Res
           </div>
         </section>
 
-        {!isFreePlan && (
-          <>
-            {/* Divider */}
-            <div className="border-t border-border" />
+        {/* Divider */}
+        <div className="border-t border-border" />
 
-            {/* Actions */}
-            <div className="flex flex-col gap-3">
+        {/* Actions */}
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={() => setShowModal(true)}
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-medium text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] touch-manipulation"
+          >
+            <FileText className="w-4 h-4" />
+            {"Generiraj pravni dokument"}
+          </button>
+          {!isFreePlan && (
+            <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => setShowModal(true)}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-medium text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] touch-manipulation"
+                onClick={handleReminder}
+                className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all hover:bg-secondary active:scale-[0.98] touch-manipulation"
               >
-                <FileText className="w-4 h-4" />
-                {"Generiraj pisno opozorilo"}
+                <Bell className="w-3.5 h-3.5 text-muted-foreground" />
+                {"Opomnik"}
               </button>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={handleReminder}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all hover:bg-secondary active:scale-[0.98] touch-manipulation"
-                >
-                  <Bell className="w-3.5 h-3.5 text-muted-foreground" />
-                  {"Opomnik"}
-                </button>
-                <button
-                  onClick={handleLawyer}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all hover:bg-secondary active:scale-[0.98] touch-manipulation"
-                >
-                  <UserCircle className="w-3.5 h-3.5 text-muted-foreground" />
-                  {"Odvetnik"}
-                </button>
-              </div>
+              <button
+                onClick={handleLawyer}
+                className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all hover:bg-secondary active:scale-[0.98] touch-manipulation"
+              >
+                <UserCircle className="w-3.5 h-3.5 text-muted-foreground" />
+                {"Odvetnik"}
+              </button>
             </div>
+          )}
+        </div>
 
-            {/* Follow-up */}
-            <FollowUpChat
-              conversationId={conversationId}
-              aiResponse={aiResponse}
-            />
-          </>
+        {/* Follow-up */}
+        {!isFreePlan && (
+          <FollowUpChat
+            conversationId={conversationId}
+            aiResponse={aiResponse}
+          />
         )}
 
         {/* Disclaimer */}
@@ -405,6 +412,7 @@ export function ResultCard({ onBack, conversationId, category, intakeData }: Res
         category={category}
         intakeData={intakeData}
         aiResponse={aiResponse}
+        isFreePlan={isFreePlan}
       />
 
       <ReminderModal

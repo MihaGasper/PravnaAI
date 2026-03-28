@@ -55,8 +55,8 @@ export function Footer() {
               <Link href="/terms" className="text-xs text-muted-foreground hover:text-accent transition-colors">
                 Pogoji uporabe
               </Link>
-              <a href="mailto:podpora@ai-odvetnik.si" className="text-xs text-muted-foreground hover:text-accent transition-colors">
-                podpora@ai-odvetnik.si
+              <a href="mailto:markobtc@gmail.com" className="text-xs text-muted-foreground hover:text-accent transition-colors">
+                markobtc@gmail.com
               </a>
             </nav>
           </div>

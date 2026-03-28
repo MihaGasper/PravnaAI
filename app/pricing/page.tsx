@@ -133,10 +133,10 @@ export default function PricingPage() {
           <p className="text-sm text-muted-foreground">
             Vprašanja? Pišite nam na{' '}
             <a
-              href="mailto:podpora@ai-odvetnik.si"
+              href="mailto:markobtc@gmail.com"
               className="text-accent hover:underline"
             >
-              podpora@ai-odvetnik.si
+              markobtc@gmail.com
             </a>
           </p>
         </div>

@@ -37,7 +37,7 @@ export default function PrivacyPage() {
               2DSOFT d.o.o.<br />
               Gorenjska cesta 24, 1234 Mengeš<br />
               Davčna št.: SI20482566, Matična št.: 8813043000<br />
-              E-pošta: <a href="mailto:podpora@ai-odvetnik.si" className="text-accent hover:underline">podpora@ai-odvetnik.si</a>
+              E-pošta: <a href="mailto:markobtc@gmail.com" className="text-accent hover:underline">markobtc@gmail.com</a>
             </p>
           </section>
 
@@ -144,7 +144,7 @@ export default function PrivacyPage() {
             </ul>
             <p className="mt-3 text-muted-foreground leading-relaxed">
               Za uveljavljanje svojih pravic nas kontaktirajte na{' '}
-              <a href="mailto:podpora@ai-odvetnik.si" className="text-accent hover:underline">podpora@ai-odvetnik.si</a>.
+              <a href="mailto:markobtc@gmail.com" className="text-accent hover:underline">markobtc@gmail.com</a>.
             </p>
           </section>
 
@@ -289,8 +289,8 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold mb-4">14. Kontakt</h2>
             <p className="text-muted-foreground leading-relaxed">
               Za vprašanja v zvezi z zasebnostjo nas kontaktirajte na:{' '}
-              <a href="mailto:podpora@ai-odvetnik.si" className="text-accent hover:underline">
-                podpora@ai-odvetnik.si
+              <a href="mailto:markobtc@gmail.com" className="text-accent hover:underline">
+                markobtc@gmail.com
               </a>
             </p>
           </section>
