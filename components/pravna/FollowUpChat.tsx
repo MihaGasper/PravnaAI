@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Lock } from "lucide-react";
+import Link from "next/link";
 import { useConversation } from "@/hooks/use-conversation";
 
 interface Message {
@@ -19,6 +20,7 @@ export function FollowUpChat({ conversationId, aiResponse }: FollowUpChatProps) 
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [streamedAnswer, setStreamedAnswer] = useState("");
+  const [quotaExceeded, setQuotaExceeded] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const { addMessage } = useConversation();
@@ -73,10 +75,7 @@ export function FollowUpChat({ conversationId, aiResponse }: FollowUpChatProps) 
       if (!response.ok) {
         const errorData = await response.json();
         if (errorData.quotaExceeded) {
-          setChatHistory([...newHistory, {
-            role: 'assistant',
-            content: 'Dosegli ste dnevno omejitev poizvedb. Nadgradite svoj paket za več poizvedb.'
-          }]);
+          setQuotaExceeded(true);
           setLoading(false);
           return;
         }
@@ -183,8 +182,27 @@ export function FollowUpChat({ conversationId, aiResponse }: FollowUpChatProps) 
             </div>
           )}
 
+          {/* Quota exceeded upgrade prompt */}
+          {quotaExceeded && (
+            <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 flex flex-col items-center gap-3 mt-2">
+              <div className="flex items-center gap-2 text-accent">
+                <Lock className="w-4 h-4" />
+                <span className="text-sm font-medium">Dnevna omejitev dosežena</span>
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                Nadgradite paket za nadaljevanje pogovora — vaš kontekst bo ohranjen.
+              </p>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2 text-sm font-medium text-background transition-all hover:bg-accent/90"
+              >
+                Nadgradi zdaj
+              </Link>
+            </div>
+          )}
+
           {/* Input for next question */}
-          {!loading && (
+          {!loading && !quotaExceeded && (
             <form onSubmit={handleSubmit} className="flex gap-2 mt-2 pt-3 border-t border-border">
               <input
                 type="text"

@@ -39,20 +39,39 @@ export async function GET() {
       .eq('usage_date', today)
       .single()
 
+    // Get active query packs
+    const { data: packs } = await supabase
+      .from('query_packs')
+      .select('queries_total, queries_used, expires_at')
+      .eq('user_id', user.id)
+      .gt('expires_at', new Date().toISOString())
+
+    const packRemaining = (packs || []).reduce(
+      (sum: number, p: any) => sum + Math.max(0, p.queries_total - p.queries_used),
+      0
+    )
+
     const plan = subscription?.plan || freePlan
     const dailyLimit = plan?.queries_per_day || 1
     const used = usage?.query_count || 0
-    const remaining = Math.max(0, dailyLimit - used)
+    const dailyRemaining = Math.max(0, dailyLimit - used)
+    const totalRemaining = dailyRemaining + packRemaining
 
     return NextResponse.json({
       subscription: subscription || null,
       plan: plan || freePlan,
       usage: {
         used,
-        remaining,
+        remaining: totalRemaining,
         limit: dailyLimit,
-        canQuery: remaining > 0,
+        canQuery: totalRemaining > 0,
       },
+      queryPack: packRemaining > 0 ? {
+        remaining: packRemaining,
+        expiresAt: packs?.sort((a: any, b: any) =>
+          new Date(a.expires_at).getTime() - new Date(b.expires_at).getTime()
+        )[0]?.expires_at,
+      } : null,
     })
   } catch {
     return NextResponse.json(

@@ -5,7 +5,8 @@ import { DocumentModal } from "./DocumentModal";
 import { ReminderModal } from "./ReminderModal";
 import { LawyerModal } from "./LawyerModal";
 import { FollowUpChat } from "./FollowUpChat";
-import { ArrowLeft, Bell, UserCircle, FileText, Check, AlertCircle, RefreshCw } from "lucide-react";
+import { ArrowLeft, Bell, UserCircle, FileText, Check, AlertCircle, RefreshCw, Lock, Zap } from "lucide-react";
+import Link from "next/link";
 import type { Category } from "./CategoryGrid";
 import type { IntakeData } from "./GuidedIntake";
 import { useConversation } from "@/hooks/use-conversation";
@@ -33,6 +34,7 @@ export function ResultCard({ onBack, conversationId, category, intakeData }: Res
   const [aiResponse, setAiResponse] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [quotaExceeded, setQuotaExceeded] = useState(false);
+  const [isFreePlan, setIsFreePlan] = useState(false);
   const hasCalledApi = useRef(false);
 
   const { addMessage } = useConversation();
@@ -75,6 +77,12 @@ export function ResultCard({ onBack, conversationId, category, intakeData }: Res
           }
 
           throw new Error(errorData.error || "Napaka pri analizi");
+        }
+
+        // Check plan from response header
+        const plan = response.headers.get("X-Plan");
+        if (plan === "free") {
+          setIsFreePlan(true);
         }
 
         // Handle streaming response
@@ -164,6 +172,90 @@ export function ResultCard({ onBack, conversationId, category, intakeData }: Res
     );
   }
 
+  const handleBuyPack = async () => {
+    try {
+      const response = await fetch('/api/stripe/create-pack-checkout', {
+        method: 'POST',
+      })
+      if (response.ok) {
+        const { url } = await response.json()
+        window.location.href = url
+      }
+    } catch {
+      // Silently fail
+    }
+  }
+
+  if (error && quotaExceeded) {
+    return (
+      <div className="mx-auto max-w-lg px-6 py-16">
+        <div className="rounded-2xl border border-accent/30 bg-card p-8 flex flex-col items-center text-center">
+          <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mb-5">
+            <Lock className="w-7 h-7 text-accent" />
+          </div>
+          <h2 className="font-serif text-2xl text-foreground mb-2">
+            Vaša poizvedba je pripravljena
+          </h2>
+          <p className="text-sm text-muted-foreground mb-6 max-w-sm">
+            Danes ste uporabili svojo brezplačno poizvedbo. Izberite možnost za takojšen dostop.
+          </p>
+
+          {/* Day pass — primary CTA */}
+          <button
+            onClick={handleBuyPack}
+            className="w-full rounded-xl border-2 border-accent bg-accent/5 p-4 flex items-center justify-between mb-3 hover:bg-accent/10 transition-colors text-left"
+          >
+            <div className="flex items-center gap-3">
+              <Zap className="w-5 h-5 text-accent shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Dnevna vstopnica</p>
+                <p className="text-xs text-muted-foreground">5 poizvedb v 24h • brez naročnine</p>
+              </div>
+            </div>
+            <p className="text-sm font-semibold text-accent shrink-0 ml-3">9,99 €</p>
+          </button>
+
+          {/* Divider */}
+          <div className="w-full flex items-center gap-3 my-3">
+            <div className="flex-1 border-t border-border" />
+            <span className="text-[11px] text-muted-foreground">ali mesečni paket</span>
+            <div className="flex-1 border-t border-border" />
+          </div>
+
+          <div className="w-full flex flex-col gap-2 mb-5">
+            <Link
+              href="/pricing"
+              className="rounded-xl border border-border bg-background p-4 flex items-center justify-between hover:bg-secondary/50 transition-colors"
+            >
+              <div className="text-left">
+                <p className="text-sm font-medium text-foreground">Osnovni paket</p>
+                <p className="text-xs text-muted-foreground">10 poizvedb na dan + dokumenti</p>
+              </div>
+              <p className="text-sm font-semibold text-accent">19,99 €/mes</p>
+            </Link>
+            <Link
+              href="/pricing"
+              className="rounded-xl border border-border bg-background p-4 flex items-center justify-between hover:bg-secondary/50 transition-colors"
+            >
+              <div className="text-left">
+                <p className="text-sm font-medium text-foreground">Profesionalni</p>
+                <p className="text-xs text-muted-foreground">50 poizvedb na dan + prioriteta</p>
+              </div>
+              <p className="text-sm font-semibold text-accent">39,99 €/mes</p>
+            </Link>
+          </div>
+
+          <button
+            onClick={onBack}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Poskusim jutri z brezplačno poizvedbo
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="mx-auto max-w-lg px-6 py-24">
@@ -172,7 +264,7 @@ export function ResultCard({ onBack, conversationId, category, intakeData }: Res
             <AlertCircle className="w-6 h-6 text-destructive" />
           </div>
           <h2 className="font-serif text-xl text-foreground mb-2">
-            {quotaExceeded ? "Omejitev dosežena" : "Napaka pri analizi"}
+            Napaka pri analizi
           </h2>
           <p className="text-sm text-muted-foreground mb-6">
             {error}
@@ -185,22 +277,13 @@ export function ResultCard({ onBack, conversationId, category, intakeData }: Res
               <ArrowLeft className="w-4 h-4" />
               Nazaj
             </button>
-            {quotaExceeded ? (
-              <a
-                href="/pricing"
-                className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:opacity-90"
-              >
-                Nadgradi paket
-              </a>
-            ) : (
-              <button
-                onClick={handleRetry}
-                className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:opacity-90"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Poskusi znova
-              </button>
-            )}
+            <button
+              onClick={handleRetry}
+              className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:opacity-90"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Poskusi znova
+            </button>
           </div>
         </div>
       </div>
@@ -235,46 +318,80 @@ export function ResultCard({ onBack, conversationId, category, intakeData }: Res
           <h3 className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-3">
             {"Pravna analiza"}
           </h3>
-          <div className="text-sm text-foreground leading-relaxed bg-card border border-border rounded-xl p-4 whitespace-pre-wrap">
-            {aiResponse || "Nalagam odgovor..."}
+          <div className="relative">
+            <div
+              className={`text-sm text-foreground leading-relaxed bg-card border border-border rounded-xl p-4 whitespace-pre-wrap ${
+                isFreePlan ? "max-h-[280px] overflow-hidden" : ""
+              }`}
+            >
+              {aiResponse || "Nalagam odgovor..."}
+            </div>
+            {isFreePlan && aiResponse && (
+              <div className="absolute bottom-0 left-0 right-0">
+                <div className="h-32 bg-gradient-to-t from-card via-card/95 to-transparent rounded-b-xl" />
+                <div className="bg-card border-t border-border rounded-b-xl px-4 pb-4 pt-2 flex flex-col items-center gap-3">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Lock className="w-4 h-4" />
+                    <span className="text-sm font-medium">Celoten odgovor je na voljo z nadgradnjo</span>
+                  </div>
+                  <button
+                    onClick={handleBuyPack}
+                    className="w-full max-w-xs inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-2.5 text-sm font-medium text-background transition-all hover:bg-accent/90 active:scale-[0.98]"
+                  >
+                    <Zap className="w-4 h-4" />
+                    Dnevna vstopnica — 9,99 €
+                  </button>
+                  <Link
+                    href="/pricing"
+                    className="text-xs text-muted-foreground hover:text-accent transition-colors"
+                  >
+                    ali mesečni paket že od 19,99 €/mesec
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
-        {/* Divider */}
-        <div className="border-t border-border" />
+        {!isFreePlan && (
+          <>
+            {/* Divider */}
+            <div className="border-t border-border" />
 
-        {/* Actions */}
-        <div className="flex flex-col gap-3">
-          <button
-            onClick={() => setShowModal(true)}
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-medium text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] touch-manipulation"
-          >
-            <FileText className="w-4 h-4" />
-            {"Generiraj pisno opozorilo"}
-          </button>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={handleReminder}
-              className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all hover:bg-secondary active:scale-[0.98] touch-manipulation"
-            >
-              <Bell className="w-3.5 h-3.5 text-muted-foreground" />
-              {"Opomnik"}
-            </button>
-            <button
-              onClick={handleLawyer}
-              className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all hover:bg-secondary active:scale-[0.98] touch-manipulation"
-            >
-              <UserCircle className="w-3.5 h-3.5 text-muted-foreground" />
-              {"Odvetnik"}
-            </button>
-          </div>
-        </div>
+            {/* Actions */}
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => setShowModal(true)}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-medium text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] touch-manipulation"
+              >
+                <FileText className="w-4 h-4" />
+                {"Generiraj pisno opozorilo"}
+              </button>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={handleReminder}
+                  className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all hover:bg-secondary active:scale-[0.98] touch-manipulation"
+                >
+                  <Bell className="w-3.5 h-3.5 text-muted-foreground" />
+                  {"Opomnik"}
+                </button>
+                <button
+                  onClick={handleLawyer}
+                  className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-all hover:bg-secondary active:scale-[0.98] touch-manipulation"
+                >
+                  <UserCircle className="w-3.5 h-3.5 text-muted-foreground" />
+                  {"Odvetnik"}
+                </button>
+              </div>
+            </div>
 
-        {/* Follow-up */}
-        <FollowUpChat
-          conversationId={conversationId}
-          aiResponse={aiResponse}
-        />
+            {/* Follow-up */}
+            <FollowUpChat
+              conversationId={conversationId}
+              aiResponse={aiResponse}
+            />
+          </>
+        )}
 
         {/* Disclaimer */}
         <p className="text-[11px] text-muted-foreground leading-relaxed text-center px-4 pb-4">

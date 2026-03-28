@@ -30,6 +30,16 @@ export async function POST(request: Request) {
       )
     }
 
+    // Get user's plan
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('plan:subscription_plans(name)')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .single()
+
+    const planName = (subscription?.plan as any)?.name || 'free'
+
     // Check quota - use database function
     const { data: canQuery } = await supabase.rpc('can_user_query', {
       p_user_id: user.id
@@ -117,6 +127,7 @@ export async function POST(request: Request) {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
         'Cache-Control': 'no-cache',
+        'X-Plan': planName,
       },
     })
   } catch {

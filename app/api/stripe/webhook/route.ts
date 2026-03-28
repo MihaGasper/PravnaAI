@@ -43,6 +43,26 @@ export async function POST(request: Request) {
     try {
       const session = event.data.object as Stripe.Checkout.Session
 
+      // Handle one-time query pack purchase
+      if (session.mode === 'payment' && session.metadata?.type === 'query_pack') {
+        const userId = session.metadata.user_id
+        const queries = parseInt(session.metadata.queries || '5', 10)
+
+        if (userId) {
+          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+
+          await supabase.from('query_packs').insert({
+            user_id: userId,
+            queries_total: queries,
+            queries_used: 0,
+            expires_at: expiresAt,
+            stripe_payment_id: session.payment_intent as string,
+          })
+        }
+
+        return NextResponse.json({ received: true })
+      }
+
       // Only handle subscription mode
       if (session.mode !== 'subscription') {
         return NextResponse.json({ received: true })
