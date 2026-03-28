@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { MessageSquare, Shield, Clock } from 'lucide-react'
 import { PricingTable } from '@/components/subscription/PricingTable'
@@ -16,11 +16,22 @@ interface Plan {
   features: string[]
 }
 
+function CheckoutCanceledBanner() {
+  const searchParams = useSearchParams()
+  const checkoutCanceled = searchParams.get('checkout') === 'canceled'
+
+  if (!checkoutCanceled) return null
+
+  return (
+    <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-lg text-center text-sm text-amber-800">
+      Plačilo je bilo preklicano. Če imate težave, nas kontaktirajte.
+    </div>
+  )
+}
+
 export default function PricingPage() {
   const [plans, setPlans] = useState<Plan[]>([])
   const [loading, setLoading] = useState(true)
-  const searchParams = useSearchParams()
-  const checkoutCanceled = searchParams.get('checkout') === 'canceled'
 
   useEffect(() => {
     async function fetchPlans() {
@@ -55,11 +66,9 @@ export default function PricingPage() {
         </div>
 
         {/* Checkout canceled message */}
-        {checkoutCanceled && (
-          <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-lg text-center text-sm text-amber-800">
-            Plačilo je bilo preklicano. Če imate težave, nas kontaktirajte.
-          </div>
-        )}
+        <Suspense>
+          <CheckoutCanceledBanner />
+        </Suspense>
 
         {/* Current usage */}
         <div className="mb-12 max-w-md mx-auto">
