@@ -25,7 +25,7 @@ export function Footer() {
               <Link href="/blog" className="text-xs text-muted-foreground hover:text-accent transition-colors">
                 Vsi nasveti
               </Link>
-              <Link href="/blog/brezplacna-pravna-pomoc-v-sloveniji-celoten-vodic" className="text-xs text-muted-foreground hover:text-accent transition-colors">
+              <Link href="/blog/brezplacna-pravna-pomoc-v-sloveniji" className="text-xs text-muted-foreground hover:text-accent transition-colors">
                 Brezplačna pravna pomoč
               </Link>
               <Link href="/blog/koliko-stane-odvetnik-v-sloveniji" className="text-xs text-muted-foreground hover:text-accent transition-colors">
@@ -33,6 +33,12 @@ export function Footer() {
               </Link>
               <Link href="/blog/kako-napisati-oporoko-vodic" className="text-xs text-muted-foreground hover:text-accent transition-colors">
                 Kako napisati oporoko
+              </Link>
+              <Link href="/blog/kupoprodajna-pogodba-vse-kar-morate-vedeti" className="text-xs text-muted-foreground hover:text-accent transition-colors">
+                Kupoprodajna pogodba
+              </Link>
+              <Link href="/blog/podjemna-pogodba-vodnik" className="text-xs text-muted-foreground hover:text-accent transition-colors">
+                Podjemna pogodba
               </Link>
             </nav>
           </div>
